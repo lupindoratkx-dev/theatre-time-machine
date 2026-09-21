@@ -21,7 +21,9 @@
 
   let memory = {};
   let current = null;
-  let mode = "explore";
+  let mode = "role";
+  let journey = null;
+  let evolution = null;
   let selected = "";
   let runtime = {};
   let stage = null;
@@ -73,6 +75,7 @@
   }
 
   function complete(id) {
+    if (!current.tasks.includes(id)) return;
     const state = memory[current.id];
 
     if (!state.done.includes(id)) {
@@ -87,8 +90,7 @@
   function finished(p) {
     const state = memory[p.id];
 
-    return state.seen.length === p.hotspots.length &&
-      p.tasks.every(task => state.done.includes(task));
+    return p.tasks.every(task => state.done.includes(task));
   }
 
   function updateProgress() {
@@ -143,8 +145,10 @@
   }
 
   function overview() {
+    if (evolution) { evolution.overview(); stage.highlight(""); return; }
     if (!current) return;
-    stage.go(current.camera);
+    if (mode === "role" && journey) journey.overview();
+    else stage.go(current.camera);
     stage.highlight("");
   }
 
@@ -215,13 +219,59 @@
     $("hotspots").hidden = true;
     $("scene-hint").textContent = "可继续阅读热点清单与完成小测验";
 
-    if (stage && current) renderCard();
+    if (stage && current) {
+      stage.stopAnimation();
+      renderCard();
+    }
   }
 
   stage = new T.Stage($("canvas"), positionHotspots, error3d);
 
   function setPeriod(id) {
+    if (journey) journey.dispose();
+    if (evolution) evolution.dispose();
+    journey = null;
+    evolution = null;
     closeModal();
+    clearTimeout(setPeriod.roleTimer);
+    $("role-arrival").hidden = true;
+    $("scene-status").textContent = "";
+    if (id === "evolution") {
+      current = null;
+      mode = "evolution";
+      selected = "";
+      nodes = [];
+      document.body.dataset.screen = "lab";
+      document.body.dataset.mode = "evolution";
+      document.documentElement.style.setProperty("--accent", periods[0].color);
+      $("hotspots").innerHTML = "";
+      $("hotspots").hidden = true;
+      $("mode-tabs").innerHTML = "";
+      $("progress-text").textContent = "EVOLUTION MODE";
+      $("progress").max = 12;
+      $("progress").value = 0;
+      $("relation").hidden = true;
+      $("scene-model-note").textContent = "剧场演化教学模型";
+      $("scene-hint").textContent = "做出选择 · 观察空间怎样改变";
+      evolution = new T.Evolution({
+        stage,
+        render: () => {
+          if (!evolution) return;
+          $("card").innerHTML = evolution.html();
+          $("progress").value = Number(evolution.progressText().split(" /")[0]) || 0;
+        },
+        status: text => { $("scene-status").textContent = text; },
+        heading: c => {
+          $("scene-kicker").textContent = c.kicker;
+          $("scene-title").textContent = c.title;
+          $("scene-date").textContent = c.date;
+        },
+        toast
+      });
+      stage.invalidate();
+      return;
+    }
+
     const p = periods.find(x => x.id === id);
 
     if (!p) {
@@ -229,18 +279,25 @@
       nodes = [];
       $("hotspots").innerHTML = "";
       document.body.dataset.screen = "home";
+      document.body.dataset.mode = "home";
       document.documentElement.style.setProperty("--accent", periods[0].color);
 
       stage.load(T.BUILDERS.greek());
       stage.show("relations", false);
       stage.show("anomaly", false);
-      stage.go(periods[0].camera, true);
+      stage.show("player", false);
+      stage.move("actor", [-.55, .75, -3.2], true);
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3;
+        stage.move("chorus" + i, [Math.cos(a) * 1.35, .13, Math.sin(a) * 1.35], true);
+      }
+      stage.go({ ...periods[0].camera, yaw: -.4, pitch: .72, distance: 28 }, true);
       updateProgress();
       return;
     }
 
     current = p;
-    mode = "explore";
+    mode = "role";
     selected = "";
 
     runtime = {
@@ -259,6 +316,7 @@
     };
 
     document.body.dataset.screen = "lab";
+    document.body.dataset.mode = "role";
     document.documentElement.style.setProperty("--accent", p.color);
 
     $("scene-kicker").textContent =
@@ -280,9 +338,6 @@
     stage.show("guides", false);
     stage.go(p.camera, true);
 
-    if (p.id === "medieval") {
-      stage.move("wagon", [-3, 0, 0]);
-    }
 
     $("relation").hidden = p.id !== "greek";
     $("relation").setAttribute("aria-pressed", "false");
@@ -303,8 +358,27 @@
       line: lines[i]
     }));
 
-    $("hotspots").hidden = !stage.ok;
-
+    $("hotspots").hidden = true;
+    journey = new T.Journey(p, {
+      stage,
+      render: renderCard,
+      complete,
+      mark: id => {
+        const state = memory[p.id];
+        if (p.hotspots.some(h => h.id === id) && !state.seen.includes(id)) {
+          state.seen.push(id); save(); updateProgress();
+        }
+      },
+      toast,
+      status: text => { $("scene-status").textContent = text; },
+      restart: () => setPeriod(p.id)
+    });
+    $("role-arrival").innerHTML = '<span>' + escape(p.journey.place) +
+      '</span><strong>' + escape(p.journey.roleEn) + '</strong><p>你是' + escape(p.journey.role) + '</p>';
+    $("role-arrival").hidden = false;
+    setPeriod.roleTimer = setTimeout(() => { $("role-arrival").hidden = true; }, 1800);
+    $("scene-hint").textContent = p.journey.aim;
+    $("relation").hidden = true;
     renderTabs();
     renderCard();
     updateProgress();
@@ -312,62 +386,33 @@
   }
 
   function setMode(next) {
-    if (!stage.ok && !["explore", "quiz"].includes(next)) {
-      toast("空间互动需要启用 WebGL；可以先阅读热点和完成小测验。");
-      return;
-    }
-
+    if (!["role", "explore", "quiz"].includes(next)) next = "role";
+    if (next === "quiz" && !current.quiz) next = "role";
+    if (journey) journey.deactivate();
     mode = next;
+    document.body.dataset.mode = next;
     selected = "";
-    runtime.feedback = "";
-    runtime.missionReady = false;
-    runtime.quizCorrect = false;
-
     stage.highlight("");
+    stage.show("relations", false);
     stage.show("anomaly", false);
-    stage.show("guides", next === "micro" && current.id === "renaissance");
-
-    runtime.inserted = false;
-    runtime.dimension = -1;
-    runtime.read.clear();
-
-    if (next === "mission") runtime.mission = 0;
-    if (next === "quiz") runtime.quiz = 0;
-
-    if (next === "micro") {
-      runtime.station = 0;
-      runtime.views.clear();
-      runtime.microCorrect = false;
-
-      if (current.id === "medieval") {
-        stage.move("wagon", [-3, 0, 0]);
-      }
+    $("hotspots").hidden = mode !== "explore" || !stage.ok;
+    $("relation").hidden = current.id !== "greek" || mode !== "explore";
+    $("role-arrival").hidden = true;
+    if (next === "role" && journey) journey.activate();
+    else {
+      stage.go(current.camera);
+      $("scene-status").textContent = next === "quiz" ? "可选思考 · 完成角色体验后再来" : "点击编号 · 查看空间结构与历史资料";
     }
-
-    stage.show("relations", next === "explore" && runtime.relations);
-    overview();
-    renderTabs();
-    renderCard();
-    updateProgress();
+    if (next === "quiz") { runtime.quiz = 0; runtime.quizCorrect = false; runtime.feedback = ""; }
+    renderTabs(); renderCard(); updateProgress();
+    $("card").scrollTop = 0;
   }
 
   function renderTabs() {
-    const tabs = current.id === "greek"
-      ? [
-          ["explore", "探索"],
-          ["mission", "布置演出"],
-          ["quiz", "小测验"],
-          ["anomaly", "时空异常"]
-        ]
-      : [
-          ["explore", "探索"],
-          ["micro", "微互动"]
-        ];
-
+    const tabs = [["role", "角色任务"], ["explore", "空间导览"]];
     $("mode-tabs").innerHTML = tabs.map(([id, label]) =>
       button("mode", label, id, id === mode ? "tab active" : "tab")
     ).join("");
-
     $("mode-tabs").querySelectorAll("button").forEach(b => {
       b.setAttribute("aria-pressed", b.dataset.value === mode ? "true" : "false");
     });
@@ -423,6 +468,13 @@
     const done = memory[p.id].done;
     let html = "";
 
+    if (mode === "role" && journey) {
+      $("card").innerHTML = journey.html();
+      journey.sync();
+      const route = $("route");
+      if (route) route.disabled = journey.state.docking || journey.state.complete;
+      return;
+    }
     if (mode === "explore") {
       const h = p.hotspots.find(x => x.id === selected);
 
@@ -439,8 +491,8 @@
 
       html += button(
         "mode",
-        p.id === "greek" ? "去布置演出 →" : "开始微互动 →",
-        p.id === "greek" ? "mission" : "micro",
+        "回到角色任务 →",
+        "role",
         "primary wide"
       );
 
@@ -664,11 +716,20 @@
   function openModal(title, html) {
     $("modal-title").textContent = title;
     $("modal-body").innerHTML = html;
-    if (!$("modal").open) $("modal").showModal();
+    const modal = $("modal");
+    if (modal.open) return;
+    if (modal.showModal) modal.showModal();
+    else { modal.setAttribute("open", ""); modal.classList.add("dialog-fallback"); }
+    if (journey && mode === "role") stage.pause(true);
   }
 
   function closeModal() {
-    if ($("modal").open) $("modal").close();
+    const modal = $("modal");
+    if (modal.open || modal.hasAttribute("open")) {
+      if (modal.close) modal.close();
+      else modal.removeAttribute("open");
+    }
+    if (journey && mode === "role") stage.pause(journey.state.paused);
   }
 
   function recap() {
@@ -692,6 +753,7 @@
   }
 
   const actions = {
+    "evolution-start": () => location.hash = "evolution",
     start: () => location.hash = "greek",
 
     home: () => {
@@ -867,13 +929,22 @@
     },
 
     help: () => {
+      if (evolution) {
+        openModal(
+          "怎样体验剧场演化",
+          '<p>① 阅读角色提出的演出问题。<br>② 选择一种处理方案。<br>③ 观察3D空间如何变化，再进入下一问题。</p>' +
+          '<p>这不是历史考试。选到效果有限的方案时，先观察“为什么问题仍然存在”，再重新选择。</p>' +
+          '<p>主线依次经过古希腊、古罗马和中世纪，重点理解“表演活动 → 社会需求 → 观演关系 → 空间形态”。</p>'
+        );
+        return;
+      }
       openModal(
         "怎样探索",
-        '<p>① 选择下方历史时期。<br>' +
-        '② 拖动旋转，双指缩放，点击编号自动聚焦。<br>' +
-        '③ 切换任务，完成一次空间判断。</p>' +
+        '<p>① 选择下方时代，你会成为一位观众、巡演者、设计师或演员。<br>' +
+        '② 按当前任务入场、推车、布置景片或转身。<br>' +
+        '③ 切到“空间导览”可自由旋转并查看热点。</p>' +
         '<p>建议横屏。电脑可用鼠标拖动与滚轮；画布获得焦点后可用方向键旋转、加减键缩放。</p>' +
-        '<p>5分钟快速体验可选四个时期各一处热点和一个互动；完整探索可延长至约10分钟。</p>' +
+        '<p>四关快速体验约5分钟；细看全部热点可延长至约10分钟。演出可暂停，随时能返回首页。</p>' +
         button("sources", "查看史料与教师提示", "", "wide")
       );
     },
@@ -948,8 +1019,26 @@
       return;
     }
 
+    if (b.dataset.action.startsWith("evolution-") && evolution) {
+      evolution.action(b.dataset.action.slice(10), b.dataset.value);
+      return;
+    }
+    if (b.dataset.action.startsWith("journey-") && journey) {
+      journey.action(b.dataset.action.slice(8), b.dataset.value);
+      return;
+    }
     const fn = actions[b.dataset.action];
     if (fn) fn(b.dataset.value);
+  });
+
+  document.addEventListener("input", e => {
+    if (journey && e.target.matches("input[data-control]")) {
+      journey.input(e.target.dataset.control, Number(e.target.value));
+    }
+  });
+
+  $("modal").addEventListener("close", () => {
+    if (journey && mode === "role") stage.pause(journey.state.paused);
   });
 
   $("modal").addEventListener("click", e => {
@@ -964,4 +1053,15 @@
 
   T.cleanMemory = cleanMemory;
   T.placeHotspots = placeHotspots;
+  // 只读状态快照供自动检查和教师诊断，不暴露控制入口。
+  T.inspect = () => ({ version: "3.0", period: evolution ? "evolution" : (current?.id || "home"), mode,
+    webgl: stage.ok, frame: stage.frame, stats: stage.stats,
+    camera: JSON.parse(JSON.stringify(stage.cam)),
+    evolution: evolution ? { chapter: evolution.chapter, step: evolution.step, busy: evolution.busy, finished: evolution.finished } : null,
+    journey: journey ? JSON.parse(JSON.stringify(journey.state)) : null,
+    progress: JSON.parse(JSON.stringify(memory)),
+    animation: stage.animation ? { elapsed: stage.animation.elapsed, duration: stage.animation.duration, paused: stage.paused } : null });
+  window.TTM_READY = true;
+  const warning = $("boot-warning");
+  if (warning) warning.hidden = true;
 })(window.TTM);

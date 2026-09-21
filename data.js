@@ -3,7 +3,7 @@ window.TTM = window.TTM || {};
 window.TTM.DATA = {
   title: "剧场时间机器",
   subtitle: "5分钟穿越西方舞台剧场史",
-  storageKey: "theatre-time-machine-v1",
+  storageKey: "theatre-time-machine-v2",
 
   periods: [
     {
@@ -23,7 +23,7 @@ window.TTM.DATA = {
         distance: 25,
         target: [0, 1, 0]
       },
-      tasks: ["mission", "quiz", "anomaly"],
+      tasks: ["journey"],
 
       hotspots: [
         {
@@ -166,7 +166,7 @@ window.TTM.DATA = {
         distance: 24,
         target: [0, 1, 0]
       },
-      tasks: ["micro"],
+      tasks: ["journey"],
 
       hotspots: [
         {
@@ -245,7 +245,7 @@ window.TTM.DATA = {
         distance: 24,
         target: [0, 1, -1]
       },
-      tasks: ["micro"],
+      tasks: ["journey"],
 
       hotspots: [
         {
@@ -339,7 +339,7 @@ window.TTM.DATA = {
         distance: 23,
         target: [0, 1.5, 0]
       },
-      tasks: ["micro"],
+      tasks: ["journey"],
 
       hotspots: [
         {
@@ -423,3 +423,71 @@ window.TTM.DATA = {
     }
   ]
 };
+
+/* V2：角色、可修改文案与交互坐标。建筑仍由 scenes.js 的同名 builder 生成。 */
+(function (T) {
+  const roles = {
+    greek: {
+      role: "观众", roleEn: "AUDIENCE", place: "GREEK WORLD · 露天剧场",
+      opening: "节庆演出即将开始。沿侧向通道进入剧场，为自己找一个座位。",
+      aim: "进入剧场，坐下观看一段演出。",
+      camera: { yaw: -.24, pitch: .62, distance: 25.5, target: [0, 1, -.3] },
+      path: [[-7, .14, -2.8], [-4.8, .14, -2.35], [-3.4, .14, -1.1], [-3.25, .22, .2], [-2.2, .23, 2.5], [0, .23, 3.25]],
+      seats: [
+        { id: "front", label: "前排", position: [.48, .46, 3.68], eye: [.48, 1.27, 3.68] },
+        { id: "middle", label: "中部", position: [.57, 1.39, 5.12], eye: [.57, 2.2, 5.12] },
+        { id: "upper", label: "高处", position: [.69, 2.53, 6.94], eye: [.69, 3.34, 6.94] }
+      ],
+      summary: "你坐在露天剧场里，看见歌队从 Parodos 走入 Orchestra，演员从 Skene 附近出现。席位、歌队区与景屋共同组织了观看与表演。",
+      anomalyText: "现代镜框和实体侧翼占据歌队区，遮住部分斜向视线，也压缩了歌队行动空间。它把表演框定为更单向的画面；这来自后来的建筑与观看传统，本例是空间置换实验。"
+    },
+    medieval: {
+      role: "巡演者", roleEn: "TRAVELLING PERFORMER", place: "YORK · 14—16世纪",
+      opening: "你是参与城市节庆演出的行会成员。推动演出车，在不同站点为新的观众停演。",
+      aim: "拖动演出车，在三处站点停演。",
+      camera: { yaw: -.28, pitch: .5, distance: 25, target: [0, 1.25, .1] },
+      route: { start: -4.8, stations: [-3, 0, 3], values: [23, 61, 100], names: ["教堂旁街道", "广场", "市集"] },
+      summary: "你把同一辆演出车带到了不同观众面前。行会的组织、车辆的移动与到站停演，使城市街道和广场成为临时剧场。"
+    },
+    renaissance: {
+      role: "舞台设计师", roleEn: "SCENOGRAPHER", place: "ITALY · 16世纪",
+      opening: "今晚的宫廷演出需要一条有纵深感的街道。调整三组景片，再寻找合适的观看位置。",
+      aim: "整理景片，移动观看位置比较透视。",
+      camera: { yaw: 0, pitch: .045, distance: 12, target: [0, 1.1, -5] },
+      flatTargets: [1, 2, 3], flatNames: ["前景", "中景", "后景"], viewpointLimit: 4.2,
+      summary: "你一移动观看位置，景片的间隔与侧边就显露出来。透视幻觉由布景的尺度、排列和特定观看位置共同形成。"
+    },
+    elizabeth: {
+      role: "演员", roleEn: "ACTOR", place: "LONDON · 约1600年",
+      opening: "你站在伸入庭院的舞台上。移动站位，转动身体，让三个方向的观众都进入你的交流。",
+      aim: "移动站位，分别朝向三面的观众。",
+      camera: { yaw: .24, pitch: .62, distance: 24, target: [0, 1.2, -.7] },
+      positions: [[-1.1, .82, -.7], [0, .82, -1.35], [1.1, .82, -.7]],
+      audience: [
+        { id: "left", label: "左侧", en: "LEFT", center: [-3.5, 1, -1.1] },
+        { id: "front", label: "正面", en: "FRONT", center: [0, 1, 2.5] },
+        { id: "right", label: "右侧", en: "RIGHT", center: [3.5, 1, -1.1] }
+      ],
+      summary: "在伸出式舞台上，交流方向随观众而变化。演员与主持人需要调整站位、身体朝向和注意力，兼顾正面与两侧。"
+    }
+  };
+  T.DATA.periods.forEach(p => {
+    p.journey = roles[p.id];
+    p.camera = p.journey.camera;
+    p.color = "#8edacb";
+  });
+  const greek = T.DATA.periods[0];
+  greek.note = "教学综合模型，采用古典晚期至希腊化时期发展的石质看台、圆形歌队区及景屋前舞台。它不是公元前5世纪雅典某年的精确复原；六位歌队人物及入场次序均为教学简化。";
+  const medieval = T.DATA.periods[1];
+  medieval.note = "参照约克晚期中世纪行会演出车实践；教堂旁街道、广场、市集是教学用三站路线，并非真实巡演地图。展开台板与观众聚拢是演示手段。中世纪还存在教堂演出、固定台位等多种形式。";
+  medieval.hotspots.find(h => h.id === "wagon").tip = "拖动路线上的车，观察停演前后的空间。";
+  const r = T.DATA.periods[2];
+  r.note = "文艺复兴透视原理的教学实验，景片、台口与滑轨采用综合示意。统一滑动景片不代表16世纪各剧场都已使用后来的完整翼幕机械系统；中央理想视点取决于本模型的设计。";
+  r.hotspots.find(h => h.id === "point").tip = "拖动观看位置滑杆，比较中央与两侧。";
+  r.hotspots.find(h => h.id === "flats").group = "flats0L";
+  r.hotspots.find(h => h.id === "scale").group = "flats2R";
+  r.sources.push(["Teatro Olimpico · 斯卡莫齐透视街景（参照案例）", "https://www.teatroolimpico.vicenza.it/en/teatro/architettura.php"]);
+  const e = T.DATA.periods[3];
+  e.camera = e.journey.camera = { yaw: 0, pitch: .82, distance: 22, target: [0, .9, -.7] };
+  e.note += "角色任务中扩大前侧剖口并临时移开舞台顶棚；切换空间导览可恢复顶棚。左右以画面为参照；方向高亮不模拟真实目光、声音或观众心理。";
+})(window.TTM);

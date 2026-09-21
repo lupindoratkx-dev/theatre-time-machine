@@ -5,12 +5,29 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111b20">
   <meta name="description" content="剧场时间机器：探索四个历史时期的微缩剧场，理解舞台形态与观演关系。">
-  <title>Theatre Time Machine｜剧场时间机器</title>
-  <link rel="stylesheet" href="./style.css">
-  <script defer src="./data.js"></script>
-  <script defer src="./engine.js"></script>
-  <script defer src="./scenes.js"></script>
-  <script defer src="./app.js"></script>
+  <title>Theatre Time Machine V3｜剧场时间机器</title>
+  <link rel="stylesheet" href="./style.css?v=3.0">
+  <script defer src="./data.js?v=2.0"></script>
+  <script defer src="./engine.js?v=2.0"></script>
+  <script defer src="./scenes.js?v=3.0"></script>
+  <script defer src="./journey.js?v=2.0"></script>
+  <script defer src="./evolution.js?v=3.0"></script>
+  <script defer src="./app.js?v=3.0"></script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23111b20'/%3E%3Cpath d='M5 10a11 11 0 0022 0M10 10a6 6 0 0012 0' fill='none' stroke='%238edacb' stroke-width='2'/%3E%3C/svg%3E">
+  <script>
+    window.TTM_READY = false;
+    window.addEventListener('error', function (e) {
+      window.TTM_BOOT_ERROR = e.message || '部分资源未完成加载';
+    });
+    setTimeout(function () {
+      if (window.TTM_READY) return;
+      var el = document.getElementById('boot-warning');
+      if (el) {
+        el.hidden = false;
+        document.getElementById('boot-detail').textContent = window.TTM_BOOT_ERROR || '部分文件加载较慢。请重试，或在手机系统浏览器中打开。';
+      }
+    }, 10000);
+  </script>
 </head>
 <body data-screen="home">
   <div class="shell">
@@ -33,18 +50,21 @@
 
     <main id="main">
       <section id="intro" aria-label="开始探索">
-        <div class="eyebrow">AN INTERACTIVE THEATRE ATLAS</div>
+        <div class="eyebrow">EVOLUTION MODE · FROM RITUAL TO CITY</div>
         <p class="home-chinese">剧场时间机器</p>
         <h1>Theatre<br>Time Machine<span class="accent">.</span></h1>
-        <p class="home-subtitle">5分钟穿越西方舞台剧场史</p>
+        <p class="home-subtitle">看剧场怎样从一次表演中“长”出来</p>
         <p class="home-copy">
-          旋转一座剧场，走进一个时代。<br>
-          从空间出发，发现表演与观看的关系。
+          从祭祀空地开始。面对真实的演出问题，<br>
+          你的每一次选择都会改变剧场空间。
         </p>
-        <button class="primary start" data-action="start">
-          开始探索 <span>Start ↗</span>
+        <button class="primary start" data-action="evolution-start">
+          开始剧场演化 <span>Evolution ↗</span>
         </button>
-        <p class="orientation">▱ 建议手机横屏体验 · 下方可直选时期</p>
+        <button class="home-secondary" data-action="start">
+          进入旧版四时代探索
+        </button>
+        <p class="orientation">▱ 建议手机横屏体验 · 演化主线约8分钟</p>
       </section>
 
       <section id="stage-area" aria-label="可交互三维剧场">
@@ -64,11 +84,13 @@
         </div>
 
         <div id="hotspots"></div>
+        <div id="role-arrival" class="role-arrival" hidden aria-hidden="true"></div>
+        <div id="scene-status" class="scene-status" role="status" aria-live="polite"></div>
 
         <div id="fallback" class="fallback" hidden>
           <strong>3D 显示提示</strong>
           <p id="fallback-text"></p>
-          <p>热点文字与小测验仍可使用。空间实验请在启用 WebGL 的浏览器中完成。</p>
+          <p>空间导览与历史资料仍可使用。3D任务请在支持 WebGL 的浏览器中完成。</p>
         </div>
 
         <div class="camera-tools" aria-label="镜头控制">
@@ -110,6 +132,8 @@
     <div id="modal-body"></div>
   </dialog>
 
+  <div class="rotate-hint">▱ 为获得最佳体验，请旋转手机。竖屏也可继续操作。</div>
+  <div id="boot-warning" class="boot-warning" hidden role="alert"><strong>页面尚未启动</strong><p id="boot-detail"></p><button onclick="location.reload()">重新加载</button></div>
   <div id="toast" role="status" aria-live="polite"></div>
 
   <noscript>
