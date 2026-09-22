@@ -4,15 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111b20">
-  <meta name="description" content="剧场时间机器：探索四个历史时期的微缩剧场，理解舞台形态与观演关系。">
-  <title>Theatre Time Machine V3｜剧场时间机器</title>
-  <link rel="stylesheet" href="./style.css?v=3.0">
-  <script defer src="./data.js?v=2.0"></script>
-  <script defer src="./engine.js?v=2.0"></script>
-  <script defer src="./scenes.js?v=3.0"></script>
-  <script defer src="./journey.js?v=2.0"></script>
-  <script defer src="./evolution.js?v=3.0"></script>
-  <script defer src="./app.js?v=3.0"></script>
+  <meta name="description" content="剧场时间机器：演化剧情与时代模型：探索剧场形态怎样回应演出与观看。">
+  <title>Theatre Genesis｜剧场时间机器 V5 · 连续叙事</title>
+  <link rel="stylesheet" href="./style.css?v=5.0">
+  <link rel="stylesheet" href="./story.css?v=5.0">
+  <link rel="stylesheet" href="./branch.css?v=5.0">
+  <link rel="stylesheet" href="./narrative.css?v=5.0">
+  <script defer src="./data.js?v=5.0"></script>
+  <script defer src="./engine.js?v=5.0"></script>
+  <script defer src="./scenes.js?v=5.0"></script>
+  <script defer src="./story-data.js?v=5.0"></script>
+  <script defer src="./story-scene.js?v=5.0"></script>
+  <script defer src="./portraits.js?v=5.0"></script>
+  <script defer src="./characters.js?v=5.0"></script>
+  <script defer src="./branch-data.js?v=5.0"></script>
+  <script defer src="./narrative-data.js?v=5.0"></script>
+  <script defer src="./branch-scene.js?v=5.0"></script>
+  <script defer src="./narrative-scene.js?v=5.0"></script>
+  <script defer src="./evolution.js?v=5.0"></script>
+  <script defer src="./narrative.js?v=5.0"></script>
+  <script defer src="./story.js?v=5.0"></script>
+  <script defer src="./navigation.js?v=5.0"></script>
+  <script defer src="./app.js?v=5.0"></script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23111b20'/%3E%3Cpath d='M5 10a11 11 0 0022 0M10 10a6 6 0 0012 0' fill='none' stroke='%238edacb' stroke-width='2'/%3E%3C/svg%3E">
   <script>
     window.TTM_READY = false;
@@ -41,8 +54,9 @@
         <span>THEATRE<small>TIME MACHINE</small></span>
       </button>
       <div class="top-actions">
-        <button data-action="help">玩法</button>
-        <button data-action="recap">时空护照</button>
+        <button data-action="home" class="home-return">⌂ 首页</button>
+        <button id="directory-button" data-action="directory">章节目录</button>
+        <button data-action="help" class="desktop-extra">玩法</button>
         <button data-action="share" class="desktop-extra">分享</button>
         <button data-action="fullscreen" class="desktop-extra">全屏</button>
       </div>
@@ -50,21 +64,20 @@
 
     <main id="main">
       <section id="intro" aria-label="开始探索">
-        <div class="eyebrow">EVOLUTION MODE · FROM RITUAL TO CITY</div>
+        <div class="eyebrow">A STORY OF SPACE &amp; PERFORMANCE</div>
         <p class="home-chinese">剧场时间机器</p>
-        <h1>Theatre<br>Time Machine<span class="accent">.</span></h1>
-        <p class="home-subtitle">看剧场怎样从一次表演中“长”出来</p>
+        <h1>Theatre<br>Genesis<span class="accent">.</span></h1>
+        <p class="home-subtitle">剧场是怎样长出来的？</p>
         <p class="home-copy">
-          从祭祀空地开始。面对真实的演出问题，<br>
-          你的每一次选择都会改变剧场空间。
+          如果没有剧场，你会怎样把它造出来？<br>
+          从一片空地出发，让每个选择改变空间。
         </p>
-        <button class="primary start" data-action="evolution-start">
-          开始剧场演化 <span>Evolution ↗</span>
+        <button class="primary start" data-action="start">
+          <span id="story-start-label">进入演化剧情</span> <span>Start ↗</span>
         </button>
-        <button class="home-secondary" data-action="start">
-          进入旧版四时代探索
-        </button>
-        <p class="orientation">▱ 建议手机横屏体验 · 演化主线约8分钟</p>
+        <p class="orientation">▱ 建议横屏 · 剧情可分段 · 模型随时查看</p>
+        <button class="home-chapter" data-action="period" data-value="europe">章节直达 · 意大利与英国 ↗</button>
+        <button class="home-explore" data-action="period" data-value="models"><strong>查看时代模型</strong><span>Model Collection →</span></button>
       </section>
 
       <section id="stage-area" aria-label="可交互三维剧场">
@@ -78,19 +91,28 @@
         </div>
 
         <div class="home-model-label">
-          <span>EXHIBIT 001</span>
-          <strong>Ancient Greece</strong>
-          <small>古希腊 · 微缩剧场</small>
+          <span>SCENE 00 · BEFORE THE THEATRE</span>
+          <strong>It starts with a gathering.</strong>
+          <small>在建筑之前，人们已相聚表演。</small>
         </div>
 
-        <div id="hotspots"></div>
-        <div id="role-arrival" class="role-arrival" hidden aria-hidden="true"></div>
+
+        <div id="branch-overlay" hidden aria-label="欧洲分支与比较"></div>
+        <div id="story-hud" hidden>
+          <div id="story-timeline" aria-label="空间发现进度"></div>
+          <div id="story-labels" aria-hidden="true"></div>
+          <div class="story-world-tools">
+            <button id="story-pause" data-action="story-pause" disabled>暂停</button>
+            <button data-action="story-progress">发现记录</button>
+          </div>
+          <span id="story-live" class="sr-only" role="status" aria-live="polite"></span>
+        </div>
         <div id="scene-status" class="scene-status" role="status" aria-live="polite"></div>
 
         <div id="fallback" class="fallback" hidden>
           <strong>3D 显示提示</strong>
           <p id="fallback-text"></p>
-          <p>空间导览与历史资料仍可使用。3D任务请在支持 WebGL 的浏览器中完成。</p>
+          <p>可返回首页和阅读历史资料。请用支持 WebGL 的系统浏览器查看模型。</p>
         </div>
 
         <div class="camera-tools" aria-label="镜头控制">
@@ -101,22 +123,28 @@
 
         <div class="scene-bottom">
           <div>
-            <span id="scene-hint">单指旋转 · 双指缩放 · 点击编号探索</span>
+            <span id="scene-hint">单指旋转 · 双指缩放</span>
             <small id="scene-model-note">教学示意模型</small>
           </div>
-          <button id="relation" data-action="relation" aria-pressed="false">观演关系</button>
         </div>
       </section>
 
-      <aside id="sidebar" aria-label="探索与任务">
-        <div class="progress-wrap">
-          <span id="progress-text"></span>
-          <progress id="progress" max="8" value="0" aria-label="当前时期探索进度"></progress>
+      <section id="story-panel" hidden aria-label="剧情对话与互动">
+        <div class="story-panel-meta"><span id="story-step"></span><small id="story-saving">本机自动记住进度</small></div>
+        <div class="story-panel-content">
+          <div class="story-character"><div id="story-portrait"></div><strong id="story-person"></strong><small id="story-person-en"></small></div>
+          <div class="story-text"><div id="story-tag"></div><h2 id="story-title" tabindex="-1"></h2><p id="story-dialogue"></p><p id="story-note" hidden></p></div>
+          <div id="story-choices" aria-label="选择或继续"></div>
         </div>
-        <nav id="mode-tabs" aria-label="体验模式"></nav>
-        <div id="card"></div>
-        <p id="storage-note" hidden>当前浏览器限制本地保存，记录仅在本次会话有效。</p>
-      </aside>
+        <div id="narrative-props"></div>
+        <nav id="story-navigation" aria-label="剧情返回与重看"></nav>
+      </section>
+      <section id="story-opening" hidden aria-label="故事序幕">
+        <span class="eyebrow">THEATRE TIME MACHINE · STORY MODE</span>
+        <p>如果这里还没有剧场……<br><strong>你会怎样，让一场演出发生？</strong></p>
+        <button class="primary" data-action="story-begin">从这片空地开始 ↗</button>
+        <small>你是演出执行者 · 演出先于建筑</small>
+      </section>
     </main>
 
     <footer>

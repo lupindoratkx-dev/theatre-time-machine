@@ -301,10 +301,13 @@ window.TTM = window.TTM || {};
           "uniform vec3 uShift;" +
           "uniform float uTurn;" +
           "uniform vec3 uPivot;" +
+          "uniform vec3 uScale;" +
+          "uniform float uTilt;" +
           "varying vec4 vColor;" +
           "void main(){" +
           "vColor=aColor;" +
-          "vec3 p=aPosition-uPivot;" +
+          "vec3 p=(aPosition-uPivot)*uScale;" +
+          "p=vec3(p.x,p.y*cos(uTilt)-p.z*sin(uTilt),p.y*sin(uTilt)+p.z*cos(uTilt));" +
           "float c=cos(uTurn),s=sin(uTurn);" +
           "p=vec3(p.x*c+p.z*s,p.y,-p.x*s+p.z*c);" +
           "gl_Position=uMatrix*vec4(p+uPivot+uShift,1.0);" +
@@ -316,8 +319,9 @@ window.TTM = window.TTM || {};
           "precision mediump float;" +
           "varying vec4 vColor;" +
           "uniform float uActive;" +
+          "uniform float uOpacity;uniform vec3 uTint;" +
           "void main(){" +
-          "gl_FragColor=vec4(mix(vColor.rgb,vec3(0.48,0.89,0.78),uActive),vColor.a);" +
+          "gl_FragColor=vec4(mix(vColor.rgb*uTint,vec3(0.48,0.89,0.78),uActive),vColor.a*uOpacity);" +
           "}"
         );
 
@@ -341,6 +345,10 @@ window.TTM = window.TTM || {};
         this.turn = gl.getUniformLocation(this.program, "uTurn");
         this.pivot = gl.getUniformLocation(this.program, "uPivot");
         this.active = gl.getUniformLocation(this.program, "uActive");
+        this.scale = gl.getUniformLocation(this.program, "uScale");
+        this.opacity = gl.getUniformLocation(this.program, "uOpacity");
+        this.tint = gl.getUniformLocation(this.program, "uTint");
+        this.tilt = gl.getUniformLocation(this.program, "uTilt");
 
         gl.enableVertexAttribArray(this.pos);
         gl.enableVertexAttribArray(this.col);
@@ -401,22 +409,41 @@ window.TTM = window.TTM || {};
           shadow: id.endsWith("~shadow"),
           angle: 0, angleTo: 0, pivot: [0, 0, 0],
           show: true,
+          scale: [1, 1, 1], opacity: 1, tint: [1, 1, 1], tilt: 0,
           offset: [0, 0, 0],
           to: [0, 0, 0]
         };
       });
 
+      this.groupParts = new Map();
+      this.parts.forEach(p => {
+        const base = p.id.split("~")[0];
+        if (!this.groupParts.has(base)) this.groupParts.set(base, []);
+        this.groupParts.get(base).push(p);
+        if (base !== p.id) this.groupParts.set(p.id, [p]);
+      });
       this.selected = "";
       this.invalidate();
     }
 
     show(id, visible) {
-      this.parts.filter(p => p.id === id || p.id.startsWith(id + "~")).forEach(p => p.show = visible);
+      this.partsFor(id).forEach(p => p.show = visible);
+      this.invalidate();
+    }
+
+    // V3 建造与褪色；默认值为恒等变换，V2 场景保持原行为。
+    appearance(id, options) {
+      this.partsFor(id).forEach(p => {
+        if (options.scale) p.scale = [...options.scale];
+        if (options.tint) p.tint = [...options.tint];
+        if (options.opacity !== undefined) p.opacity = clamp(options.opacity, 0, 1);
+        if (options.tilt !== undefined) p.tilt = options.tilt;
+      });
       this.invalidate();
     }
 
     move(id, position, instant = false) {
-      this.parts.filter(p => p.id === id || p.id.startsWith(id + "~")).forEach(p => {
+      this.partsFor(id).forEach(p => {
         p.to = [...position];
         if (instant) p.offset = [...position];
       });
@@ -424,7 +451,7 @@ window.TTM = window.TTM || {};
     }
 
     rotate(id, angle, pivot = [0, 0, 0], instant = false) {
-      this.parts.filter(p => p.id === id || p.id.startsWith(id + "~")).forEach(p => {
+      this.partsFor(id).forEach(p => {
         p.angleTo = p.angle + Math.atan2(Math.sin(angle - p.angle), Math.cos(angle - p.angle));
         p.pivot = [...pivot];
         if (instant) p.angle = p.angleTo;
@@ -455,6 +482,8 @@ window.TTM = window.TTM || {};
     offset(id) {
       return this.parts.find(p => p.id === id)?.offset || [0, 0, 0];
     }
+
+    partsFor(id) { return this.groupParts?.get(id) || []; }
 
     highlight(id) {
       this.selected = id;
@@ -653,7 +682,7 @@ window.TTM = window.TTM || {};
       this.mvp = matrix(this.cam, this.width / this.height);
       g.uniformMatrix4fv(this.mat, false, this.mvp);
 
-      const visible = this.parts.filter(p => p.show).sort((a, b) => Number(a.shadow) - Number(b.shadow));
+      const visible = this.parts.filter(p => p.show && p.opacity > .005).sort((a, b) => Number(a.shadow) - Number(b.shadow));
       this.stats = { drawCalls: visible.length, triangles: visible.reduce((n, p) => n + p.count / 3, 0), width: w, height: h };
       visible.forEach(p => {
         g.depthMask(!p.shadow);
@@ -662,6 +691,10 @@ window.TTM = window.TTM || {};
         g.vertexAttribPointer(this.col, 4, g.FLOAT, false, 28, 12);
         g.uniform3fv(this.shift, p.offset);
         g.uniform3fv(this.pivot, p.pivot);
+        g.uniform3fv(this.scale, p.scale);
+        g.uniform3fv(this.tint, p.tint);
+        g.uniform1f(this.opacity, p.opacity);
+        g.uniform1f(this.tilt, p.tilt);
         g.uniform1f(this.turn, p.angle);
         g.uniform1f(this.active, !p.shadow && this.selected && (p.id === this.selected || p.id.startsWith(this.selected + "~")) ? .38 : 0);
         g.drawArrays(g.TRIANGLES, 0, p.count);

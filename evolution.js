@@ -1,338 +1,329 @@
-/* Evolution Mode：以“问题 → 决策 → 空间变化”串联古希腊、罗马与中世纪。 */
-(function (T) {
-  "use strict";
-
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-
-  const CHAPTERS = {
-    greek: {
-      kicker: "BEFORE THEATRE → ANCIENT GREECE",
-      title: "剧场从一次表演中长出来",
-      date: "祭仪 · 公共观看 · 古希腊",
-      camera: { yaw: .42, pitch: .73, distance: 27, target: [0, .8, 0] },
-      events: [
-        {
-          speaker: "祭司 PRIEST",
-          problem: ["歌队要围绕祭坛歌唱、舞蹈。", "怎样让表演拥有一个共同发生的地方？"],
-          choices: [
-            { text: "让所有表演者分散在不同地方", consequence: "表演彼此分散，很难形成共同的观看中心。" },
-            { text: "围绕中央形成共同的表演区域", ok: true, consequence: "集体歌舞获得了共同的空间核心。" }
-          ],
-          unlock: ["ORCHESTRA", "歌舞场", "集体歌舞构成了早期戏剧空间的重要核心。"],
-          transition: "orchestra"
-        },
-        {
-          speaker: "观众 AUDIENCE",
-          problem: ["人越来越多了。", "我站在后面完全看不到，怎么办？"],
-          choices: [
-            { text: "大家继续挤在同一块平地", consequence: "大量观众处于同一高度，后排仍然被前排遮挡。" },
-            { text: "利用旁边的天然山坡形成高差", ok: true, consequence: "高差改善了大规模观看的视线条件。" }
-          ],
-          unlock: ["THEATRON", "观看区域 / 观众席", "天然坡地为大量观众提供了观看所需的高差。"],
-          transition: "theatron"
-        },
-        {
-          speaker: "演员 ACTOR",
-          problem: ["下一场我要换面具和服装。", "这些准备工作应该在哪里完成？"],
-          choices: [
-            { text: "直接在所有观众面前更换", consequence: "演员缺少被遮蔽的准备空间，角色转换也失去组织。" },
-            { text: "在表演区旁搭建服务演员的小型建筑", ok: true, consequence: "演员拥有了候场、换装和出入的后台空间。" }
-          ],
-          unlock: ["SKENE", "景屋", "Skene最初首先服务于演员准备、换装与出入场，后来越来越重要。"],
-          transition: "skene"
-        },
-        {
-          speaker: "演员 ACTOR",
-          problem: ["人物之间的行动越来越重要。", "演员需要更明确的活动区域。"],
-          choices: [
-            { text: "所有行动仍只围绕歌队中心进行", consequence: "人物行动被限制，新的戏剧结构很难展开。" },
-            { text: "强化景屋前方的演员活动区域", ok: true, consequence: "歌队仍然存在，但人物行动开始获得更清楚的位置。" }
-          ],
-          unlock: ["ACTOR SPACE", "演员行动增强", "空间重心开始从纯粹的歌队中心，向人物行动扩展。"],
-          transition: "actor-space"
-        },
-        {
-          speaker: "工匠 BUILDER",
-          problem: ["每年都重新搭木结构，人数又越来越多。", "怎样让剧场更稳定、更适合长期使用？"],
-          choices: [
-            { text: "每年继续重新搭临时结构", consequence: "临时结构仍要反复搭建，稳定性与容量问题没有解决。" },
-            { text: "逐渐改造成永久性的石质设施", ok: true, consequence: "观看空间变得稳定、规整，并形成成熟的公共剧场。" }
-          ],
-          unlock: ["GREEK THEATRE", "成熟古希腊剧场", "这座剧场不是一次设计完成的，而是在一次次表演需求中逐渐形成的。"],
-          transition: "stone"
-        }
-      ]
-    },
-    roman: {
-      kicker: "ANCIENT ROME",
-      title: "如果没有山，剧场还能成立吗？",
-      date: "工程技术 · 城市建筑 · 公共娱乐",
-      camera: { yaw: .42, pitch: .74, distance: 27, target: [0, 1, 0] },
-      events: [
-        {
-          speaker: "罗马工程师 ENGINEER",
-          problem: ["希腊剧场常借助天然坡地。", "但我们的城市没有这样的山，怎么办？"],
-          choices: [
-            { text: "只有有山的城市才能建剧场", consequence: "剧场仍然被自然地形限制，无法成为独立的城市建筑。" },
-            { text: "用工程结构人工支撑观众席", ok: true, consequence: "观众席摆脱天然山坡，剧场可以独立建造。" }
-          ],
-          unlock: ["WE BUILT THE HILL.", "我们自己造了一座山", "拱券与支撑结构让剧场逐渐摆脱对天然坡地的依赖。"],
-          transition: "arcades"
-        },
-        {
-          speaker: "演出负责人 PRODUCER",
-          problem: ["剧场已经成为城市公共建筑。", "舞台背后需要怎样的视觉背景？"],
-          choices: [
-            { text: "继续完全依赖远处自然景观", consequence: "舞台背景仍然缺少稳定、可控制的城市视觉形象。" },
-            { text: "建立永久、宏伟的建筑立面", ok: true, consequence: "舞台背景本身成为建筑和视觉设计的一部分。" }
-          ],
-          unlock: ["SCAENAE FRONS", "舞台背景建筑", "柱列、门洞与分层立面把舞台背景高度建筑化、纪念碑化。"],
-          transition: "scaenae"
-        },
-        {
-          speaker: "观众 AUDIENCE",
-          problem: ["我们想看的不只是戏剧，还有更大型的公共娱乐。", "如果更多方向都需要观看呢？"],
-          choices: [
-            { text: "所有观看仍保持一个方向", consequence: "大规模竞技与奇观仍受到单向观看关系限制。" },
-            { text: "让观众进一步围绕中央活动区域", ok: true, consequence: "观看关系从半围合进一步发展为环绕。" }
-          ],
-          unlock: ["AMPHITHEATRE", "环绕型公共娱乐空间", "罗马公共娱乐继续扩大，圆形竞技场把观众组织到中央活动区四周。"],
-          transition: "amphi"
-        }
-      ]
-    },
-    medieval: {
-      kicker: "5TH CENTURY → MEDIEVAL",
-      title: "剧场制度衰落以后，表演去哪里？",
-      date: "礼仪 · 象征空间 · 城市",
-      camera: { yaw: .50, pitch: .72, distance: 25, target: [-1, 1, -1] },
-      events: [
-        {
-          speaker: "教士 CLERIC",
-          problem: ["许多信徒无法直接阅读宗教故事。", "怎样让他们理解复活等故事？"],
-          choices: [
-            { text: "只增加更多文字说明", consequence: "文字仍然无法解决所有人的理解问题。" },
-            { text: "用人物、动作、对白和音乐把故事演出来", ok: true, consequence: "礼仪空间开始承担越来越明显的表演功能。" }
-          ],
-          unlock: ["CHURCH PERFORMANCE", "教堂礼仪表演", "古典剧场制度衰落后，表演又在新的宗教空间中获得组织。"],
-          transition: "church"
-        },
-        {
-          speaker: "教士 CLERIC",
-          problem: ["故事里同时有天堂、耶路撒冷和地狱。", "一个地点已经不够用了。"],
-          choices: [
-            { text: "每一段都把全部场景拆掉重搭", consequence: "故事不断中断，多个地点之间的关系也难以被看见。" },
-            { text: "让不同象征地点同时并置", ok: true, consequence: "人物只要移动位置，就可以进入另一个戏剧地点。" }
-          ],
-          unlock: ["MANSION + PLATEA", "并置的象征空间", "不同地点可以同时存在，空间的意义由符号和人物行动共同建立。"],
-          transition: "mansion"
-        },
-        {
-          speaker: "观众 AUDIENCE",
-          problem: ["故事越来越大，来看的人也越来越多。", "教堂已经装不下了。"],
-          choices: [
-            { text: "只允许少数人进入教堂", consequence: "公共观看需求仍然没有解决。" },
-            { text: "把演出逐渐移向教堂门前、广场和街道", ok: true, consequence: "表演空间从建筑内部扩张到了城市公共空间。" }
-          ],
-          unlock: ["PUBLIC SPACE", "教堂 → 广场 → 街道", "中世纪没有形成一种单一标准剧场，城市中的不同地点都可能被组织为表演空间。"],
-          transition: "city"
-        },
-        {
-          speaker: "巡演者 PERFORMER",
-          problem: ["城市这么大，不同街区的人都想看。", "难道所有人都必须来到同一个广场吗？"],
-          choices: [
-            { text: "让所有观众自己来到同一个地点", consequence: "观看仍然被固定在单一地点，城市尺度的问题没有解决。" },
-            { text: "让舞台移动到观众面前", ok: true, consequence: "演出车把同一段表演带到不同城市站点。" }
-          ],
-          unlock: ["PAGEANT WAGON", "流动演出车", "当舞台开始移动，街道、站点和整座城市都参与组织观看。"],
-          transition: "wagon"
-        }
-      ]
+/* 两条支线共用这一控制器；继续使用 Story.run / StoryWorld / Stage。 */
+(function(T){
+  'use strict';
+  const D=T.BRANCH,$=id=>document.getElementById(id),copy=x=>JSON.parse(JSON.stringify(x));
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const button=(action,text,value='',disabled=false,cls='')=>`<button type="button" data-action="story-evo-${action}" data-value="${esc(value)}" class="${cls}" ${disabled?'disabled':''}>${text}</button>`;
+  const unique=(a,allowed)=>Array.isArray(a)?[...new Set(a.filter(x=>allowed.includes(x)))]:[];
+  const number=(v,a,b,f=a)=>Number.isFinite(v)?T.clamp(v,a,b):f;
+  const freshRoute=()=>({cursor:0,phase:'problem',done:[],beat:0,values:{perspective:0,viewpoint:0,views:[],scenery:'city',sceneries:[],company:[],platform:0,morph:0,looks:[],props:'palace',propVisits:[],cosmos:[]}});
+  const fresh=()=>({schema:5,invited:false,invitation:0,screen:'trunk',entry:'story',route:null,italy:freshRoute(),england:freshRoute(),comparison:{value:50,ends:[],layout:'split'}});
+  function clean(raw,unlocked=false){
+    const out=fresh();if(!raw||typeof raw!=='object')return out;
+    out.entry=raw.entry==='chapter'?'chapter':'story';
+    for(const route of ['italy','england']){
+      const r=raw[route],s=out[route],events=D.routes[route];if(!r)continue;
+      // V5 的章节跳转允许分段完成；旧版本仍按连续记录迁移。
+      if(raw.schema===5)s.done=unique(r.done,events.map(e=>e.id));
+      else for(const event of events){if(!Array.isArray(r.done)||!r.done.includes(event.id))break;s.done.push(event.id);}
+      s.cursor=raw.schema===5&&Number.isInteger(r.cursor)?T.clamp(r.cursor,0,events.length-1):Math.min(s.done.length,events.length-1);
+      s.phase=['problem','activity','discovery'].includes(r.phase)?r.phase:'problem';
+      const v=r.values||{},o=s.values;
+      for(const k of ['perspective','platform'])o[k]=Math.round(number(v[k],0,4));
+      o.viewpoint=number(v.viewpoint,-100,100,0);o.morph=number(v.morph,0,100);
+      o.views=unique(v.views,['center','side']);o.looks=unique(v.looks,['left','front','right']);
+      o.sceneries=unique(v.sceneries,['city','palace','forest']);o.scenery=['city','palace','forest'].includes(v.scenery)?v.scenery:'city';
+      o.propVisits=unique(v.propVisits,['palace','forest','battle']);o.props=['palace','forest','battle'].includes(v.props)?v.props:'palace';
+      o.company=unique(v.company,[0,1,2,3]);if(o.company.length<4)o.company=o.company.filter(x=>x!==3);
+      o.cosmos=unique(v.cosmos,['heaven','earth','hell']);
+      const event=events[s.cursor],beats=T.NARRATIVE.events[event.id].beats;
+      s.beat=Number.isInteger(r.beat)?T.clamp(r.beat,0,beats.length-1):s.phase==='discovery'?beats.length-1:s.phase==='activity'?Math.max(0,beats.findIndex(b=>b.kind==='activity')):0;
+      const activity=beats.findIndex(b=>b.kind==='activity');
+      if(activity>=0&&s.beat>activity&&!ready(event.activity,o))s.beat=activity;
+      s.phase=beats[s.beat].kind==='activity'?'activity':beats[s.beat].kind==='teaching'?'discovery':'problem';
+      if(s.phase==='activity'&&!event.activity)s.phase='problem';
+      if(s.phase==='discovery'&&event.activity&&!ready(event.activity,o))s.phase='activity';
     }
-  };
-
-  class Evolution {
-    constructor(ctx) {
-      this.ctx = ctx;
-      this.stage = ctx.stage;
-      this.chapter = "greek";
-      this.step = 0;
-      this.busy = false;
-      this.feedback = "";
-      this.unlock = null;
-      this.finished = false;
-      this.active = true;
-      this.loadChapter("greek");
+    out.invited=raw.invited===true||raw.schema!==5&&raw.screen!=='trunk';
+    out.invitation=Number.isInteger(raw.invitation)?T.clamp(raw.invitation,0,T.NARRATIVE.invitation.length-1):0;
+    out.route=['italy','england'].includes(raw.route)?raw.route:null;
+    out.screen=['trunk','invitation','map','route','comparison','conclusion'].includes(raw.screen)?raw.screen:'trunk';
+    if(!unlocked&&out.entry!=='chapter')out.screen='trunk';
+    if(out.screen==='route'&&!out.route)out.screen='map';
+    if(['comparison','conclusion'].includes(out.screen)&&!both(out))out.screen='map';
+    const c=raw.comparison||{};out.comparison.value=number(c.value,0,100,50);out.comparison.ends=unique(c.ends,[0,100]);
+    out.comparison.layout=c.layout==='mix'?'mix':'split';
+    if(out.screen==='conclusion'&&out.comparison.ends.length<2)out.screen='comparison';
+    return out;
+  }
+  const complete=(s,r)=>s[r].done.length===D.routes[r].length;
+  const both=s=>complete(s,'italy')&&complete(s,'england');
+  function ready(kind,v){
+    return {perspective:v.perspective===4,viewpoint:v.views.length===2,scenery:v.sceneries.length===3,company:v.company.length===4,
+      platform:v.platform===4,morph:v.morph===100,'actor-view':v.looks.length===3,props:v.propVisits.length===3,cosmos:v.cosmos.length===3}[kind]||false;
+  }
+  class Evolution{
+    constructor(owner){
+      this.o=owner;this.world=owner.world;this.stage=owner.stage;
+      this.state=owner.memory.evolution;this.feedback='';this.selectedToken='';
+      if(owner.context.entry==='europe'&&this.state.screen==='trunk'){this.state.entry='chapter';this.state.screen='map';owner.save();}
     }
-
-    chapterData() { return CHAPTERS[this.chapter]; }
-    event() { return this.chapterData().events[this.step]; }
-
-    loadChapter(id) {
-      this.chapter = id;
-      this.step = 0;
-      this.busy = false;
-      this.feedback = "";
-      this.unlock = null;
-      this.finished = false;
-      if (id === "greek") {
-        this.stage.load(T.BUILDERS.greek());
-        ["theatron","orchestra","skene","proskenion","parodos","people","player","actor","relations","anomaly","evo-wood-theatron"].forEach(x => this.stage.show(x, false));
-        for (let i=0;i<6;i++) this.stage.show("chorus"+i,false);
-        this.stage.show("evo-altar", true); this.stage.show("evo-ritual", true);
-      } else if (id === "roman") {
-        this.stage.load(T.BUILDERS.roman());
-        ["roman-arcades","roman-scaenae","roman-amphi"].forEach(x => this.stage.show(x,false));
-        ["roman-hill","roman-cavea","roman-orchestra","roman-stage","roman-people"].forEach(x => this.stage.show(x,true));
-      } else {
-        this.stage.load(T.BUILDERS.medieval());
-        ["houses","stations","wagon","wagon-flap","wagon-cast","crowd0","crowd1","crowd2","church-performance","mansion-heaven","mansion-jerusalem","mansion-hell"].forEach(x => this.stage.show(x,false));
-        this.stage.show("church",true); this.stage.show("street",true);
-      }
-      this.stage.controlsEnabled = true;
-      this.stage.go(this.chapterData().camera, true);
-      this.updateHeading();
-      this.ctx.status(this.chapter === "greek" ? "从一块空地开始 · 先解决第一个表演问题" : this.chapter === "roman" ? "ROME · 新的社会与技术条件带来新的空间问题" : "5TH CENTURY · 古典剧场制度衰落，但表演没有消失");
-      this.render();
+    get active(){return this.state.screen!=='trunk';}
+    get route(){return this.state[this.state.route];}
+    get event(){return D.routes[this.state.route]?.[this.route?.cursor];}
+    values(){const v=copy(this.route.values);if(this.route.cursor>4&&this.state.route==='italy')v.perspective=4;return v;}
+    scene(){
+      const d=this.event;
+      if(this.route.phase!=='problem')return d.sceneMutation;
+      if(d.intro==='giant')return 'it-giant';
+      if(d.intro==='travel')return 'en-travel';
+      if(d.intro==='flashback')return 'en-flashback';
+      return d.from;
     }
-
-    updateHeading() { this.ctx.heading(this.chapterData()); }
-    render() { if (this.active) this.ctx.render(); }
-    overview() { this.stage.go(this.chapterData().camera); }
-    dispose() { this.active=false; this.stage.stopAnimation(); this.stage.controlsEnabled=true; }
-
-    reveal(id, duration=900, depth=2.2, done) {
-      this.stage.move(id,[0,-depth,0],true); this.stage.show(id,true);
-      this.stage.animate(duration,t=>this.stage.move(id,[0,-depth*(1-t),0],true),()=>{ this.stage.move(id,[0,0,0],true); if(done)done(); });
+    snapshot(){
+      const s=this.state;
+      if(s.screen==='map')return this.world.snapshot('STATE_BRANCH_EUROPE',this.o.memory.stop);
+      if(['comparison','conclusion'].includes(s.screen))return this.world.comparison(s.comparison.value,s.comparison.layout==='split');
+      return this.world.snapshot(this.scene(),this.o.memory.stop,this.values());
     }
-
-    finishTransition(ev) {
-      this.busy=false;
-      this.unlock=ev.unlock;
-      this.feedback=ev.choices.find(c=>c.ok).consequence;
-      this.step++;
-      this.render();
+    restore(){this.world.apply(this.snapshot());}
+    overview(instant=false){
+      let camera;
+      if(this.state.screen==='map')camera=D.mapCamera;
+      else if(['comparison','conclusion'].includes(this.state.screen))camera=this.state.comparison.layout==='split'?D.compareCamera:D.routeCamera;
+      else camera=this.event.camera;
+      camera=copy(camera);
+      const aspect=this.stage.canvas.clientWidth/Math.max(1,this.stage.canvas.clientHeight);
+      if(aspect<1.2)camera.distance*=1.2/Math.max(.6,aspect);
+      this.stage.go(camera,instant);this.stage.controlsEnabled=!this.o.busy;this.stage.highlight('');
     }
-
-    success(ev) {
-      this.busy=true; this.feedback=""; this.unlock=null; this.render();
-      const finish=()=>this.finishTransition(ev);
-      switch(ev.transition) {
-        case "orchestra":
-          this.reveal("orchestra",850,1.2,finish); break;
-        case "theatron":
-          this.stage.show("evo-ritual",false);
-          for(let i=0;i<6;i++) { const a=i*Math.PI/3; this.stage.move("chorus"+i,[Math.cos(a)*1.35,.13,Math.sin(a)*1.35],true); this.stage.show("chorus"+i,true); }
-          this.stage.show("people",true); this.stage.show("parodos",true);
-          this.reveal("evo-wood-theatron",1100,2.8,()=>{ this.stage.go({yaw:.45,pitch:.72,distance:26,target:[0,1,1]}); finish(); });
-          break;
-        case "skene":
-          this.reveal("skene",1050,3.0,()=>{ this.stage.show("actor",true); this.stage.move("actor",[0,.75,-3.35],true); finish(); }); break;
-        case "actor-space":
-          this.reveal("proskenion",850,1.4,()=>{ this.stage.move("actor",[-.55,.75,-3.05],true); finish(); }); break;
-        case "stone":
-          this.stage.show("evo-wood-theatron",false);
-          this.reveal("theatron",1300,2.8,()=>{ this.stage.go({yaw:.45,pitch:.78,distance:25,target:[0,1,0]}); finish(); }); break;
-        case "arcades":
-          this.stage.show("roman-arcades",true); this.stage.move("roman-arcades",[0,-2.4,0],true);
-          this.stage.animate(1350,t=>{ this.stage.move("roman-hill",[0,-2.6*t,0],true); this.stage.move("roman-arcades",[0,-2.4*(1-t),0],true); },()=>{ this.stage.show("roman-hill",false); this.stage.move("roman-arcades",[0,0,0],true); finish(); });
-          break;
-        case "scaenae": this.reveal("roman-scaenae",1150,3.2,finish); break;
-        case "amphi":
-          this.stage.show("roman-amphi",true); this.stage.move("roman-amphi",[0,-2.8,0],true);
-          this.stage.animate(1300,t=>{ this.stage.move("roman-amphi",[0,-2.8*(1-t),0],true); },()=>{ this.stage.show("roman-stage",false); this.stage.show("roman-scaenae",false); this.stage.go({yaw:.35,pitch:1.02,distance:27,target:[0,.7,0]}); finish(); });
-          break;
-        case "church": this.reveal("church-performance",850,1.4,finish); break;
-        case "mansion":
-          ["mansion-heaven","mansion-jerusalem","mansion-hell"].forEach((id,i)=>{ this.stage.move(id,[0,-1.8,0],true); this.stage.show(id,true); });
-          this.stage.animate(1100,t=>["mansion-heaven","mansion-jerusalem","mansion-hell"].forEach(id=>this.stage.move(id,[0,-1.8*(1-t),0],true)),()=>{ this.stage.go({yaw:.35,pitch:.72,distance:23,target:[0,1,0]}); finish(); });
-          break;
-        case "city":
-          ["houses","stations"].forEach(id=>{this.stage.move(id,[0,-1.8,0],true);this.stage.show(id,true);});
-          this.stage.animate(1200,t=>["houses","stations"].forEach(id=>this.stage.move(id,[0,-1.8*(1-t),0],true)),()=>{ this.stage.go({yaw:.5,pitch:.75,distance:26,target:[0,1,0]}); finish(); });
-          break;
-        case "wagon":
-          ["wagon","wagon-flap","wagon-cast","crowd0","crowd1","crowd2"].forEach(id=>this.stage.show(id,true));
-          ["wagon","wagon-flap","wagon-cast"].forEach(id=>this.stage.move(id,[-3,0,0],true));
-          this.stage.animate(4200,t=>{
-            const x=-3+6*t; ["wagon","wagon-flap","wagon-cast"].forEach(id=>this.stage.move(id,[x,0,0],true));
-          },()=>{ this.stage.go({yaw:.48,pitch:.78,distance:24,target:[0,1,1]}); finish(); });
-          break;
-        default: finish();
+    enterMap(animate=true){
+      if(this.o.busy||!this.stage.ok)return;
+      this.o.context.close?.();this.state.screen='map';this.state.route=null;this.feedback='';this.trying=false;this.o.phase='evolution';
+      this.o.setLabels([]);this.o.save();
+      if(animate){this.o.busy=true;this.render();this.overview();this.o.run(this.snapshot(),1800,()=>this.render());}
+      else{this.restore();this.overview(true);this.render();}
+    }
+    beginRoute(route){
+      if(!D.routes[route]||this.o.busy||!this.stage.ok)return;
+      this.o.context.close?.();this.state.screen='route';this.state.route=route;this.o.save();this.feedback='';this.trying=false;
+      this.enterEvent();
+    }
+    enterEvent(){
+      this.o.setLabels([]);this.o.busy=true;this.render();this.overview();
+      const d=this.event;
+      if(this.route.phase!=='problem'){this.o.run(this.snapshot(),1000,()=>{this.render();this.activityView();});return;}
+      if(d.intro==='travel'){
+        const list=['en-travel-hall','en-town-hall','en-travel'];let at=0;
+        const step=()=>{const name=list[at++];this.o.feedback='';this.feedback=['贵族大厅 · GREAT HALL','市政空间 · TOWN HALL','旅馆院落 · INN YARD'][at-1];this.o.busy=true;this.render();this.o.run(this.world.snapshot(name,-1,this.values()),1050,()=>at<list.length?step():(this.feedback='',this.render()));};step();
+      }else if(d.intro==='flashback'){
+        this.stage.go(D.mapCamera);this.o.run(this.world.snapshot('city-mansions'),1300,()=>{this.o.busy=true;this.feedback='水平并置 → 比较新的垂直组织';this.render();this.overview();this.o.run(this.snapshot(),1500,()=>{this.feedback='';this.render();});});
+      }else{
+        const begin=this.world.snapshot(d.from,-1,this.values());
+        this.o.run(begin,1100,()=>{
+          if(d.intro==='giant'){this.o.busy=true;this.render();this.o.run(this.snapshot(),2600,()=>this.render());}
+          else this.render();
+        });
       }
     }
-
-    choose(index) {
-      if(this.busy || this.finished) return;
-      const ev=this.event(); if(!ev) return;
-      const ch=ev.choices[index]; if(!ch) return;
-      if(!ch.ok) { this.feedback=ch.consequence; this.unlock=null; this.ctx.status("CONSEQUENCE · 问题仍然存在，请重新选择"); this.render(); return; }
-      this.ctx.status("SOLUTION ADOPTED · 空间正在发生变化");
-      this.success(ev);
-    }
-
-    nextChapter() {
-      if(this.busy) return;
-      if(this.chapter==="greek") this.loadChapter("roman");
-      else if(this.chapter==="roman") {
-        this.ctx.status("5TH CENTURY · 古典剧场制度衰落，但表演没有消失");
-        this.loadChapter("medieval");
-      } else { this.finished=true; this.render(); }
-    }
-
-    restart() { this.loadChapter("greek"); }
-
-    action(name,value) {
-      if(name==="choice") this.choose(Number(value));
-      else if(name==="next-chapter") this.nextChapter();
-      else if(name==="restart") this.restart();
-      else if(name==="overview") this.overview();
-    }
-
-    progressText() {
-      const totals={greek:5,roman:3,medieval:4};
-      const prior=this.chapter==="greek"?0:this.chapter==="roman"?5:8;
-      return `${prior+Math.min(this.step,totals[this.chapter])} / 12`;
-    }
-
-    html() {
-      if(this.finished) return `
-        <div class="evo-card evo-final">
-          <div class="eyebrow">EVOLUTION COMPLETE · 12 / 12</div>
-          <h2>剧场从来不只是一栋建筑。</h2>
-          <p>它是表演方式、社会制度、观看关系与技术条件共同塑造出来的空间。</p>
-          <div class="evo-timeline final"><span>祭祀空地</span><b>→</b><span>希腊剧场</span><b>→</b><span>罗马建筑</span><b>→</b><span>教堂</span><b>→</b><span>城市与演出车</span></div>
-          <button class="primary wide" data-action="evolution-restart">从头再看一次</button>
-          <button class="wide" data-action="home">返回首页</button>
-        </div>`;
-
-      const c=this.chapterData();
-      const ev=this.event();
-      if(!ev) {
-        const next=this.chapter==="greek"?"进入古罗马 →":this.chapter==="roman"?"进入中世纪 →":"完成这次空间旅行 →";
-        const summary=this.chapter==="greek"?"祭祀空地 → Orchestra → Theatron → Skene → 石质公共剧场":this.chapter==="roman"?"天然坡地 → 人工支撑 → Scaenae Frons → 环绕型公共娱乐空间":"教堂礼仪 → Mansion + Platea → 广场与街道 → Pageant Wagon";
-        return `<div class="evo-card chapter-complete">
-          <div class="eyebrow">CHAPTER COMPLETE · ${this.progressText()}</div>
-          <h2>${esc(c.title)}</h2>
-          <p class="evo-summary">${esc(summary)}</p>
-          ${this.unlock?`<div class="evo-unlock"><span>${esc(this.unlock[0])}</span><strong>${esc(this.unlock[1])}</strong><p>${esc(this.unlock[2])}</p></div>`:""}
-          <button class="primary wide" data-action="evolution-next-chapter">${next}</button>
-        </div>`;
+    choose(index){
+      if(this.state.screen!=='route'||this.route.phase!=='problem'||this.o.busy||!this.stage.ok)return;
+      const d=this.event,c=d.choices[Number(index)];if(!c)return;
+      this.feedback=c.consequence;
+      if(Number(index)!==d.successfulChoice){
+        this.trying=true;this.o.busy=true;this.render();
+        if(c.effect==='giant-repeat'){
+          this.world.apply(this.world.snapshot('it-perspective',-1,this.values()));
+          this.o.run(this.snapshot(),2200,()=>this.render());return;
+        }
+        if(c.effect==='side')this.viewpoint(100,false);
+        this.o.run(this.world.alternativeBranch(c.effect,this.scene(),this.values()),1000,()=>this.render());return;
       }
-
-      const choices=ev.choices.map((x,i)=>`<button ${this.busy?"disabled":""} data-action="evolution-choice" data-value="${i}"><span>${String.fromCharCode(65+i)}</span>${esc(x.text)}</button>`).join("");
-      return `<div class="evo-card">
-        <div class="evo-meta"><span>${esc(c.kicker)}</span><b>EVOLUTION ${this.progressText()}</b></div>
-        ${this.unlock?`<div class="evo-unlock"><span>${esc(this.unlock[0])}</span><strong>${esc(this.unlock[1])}</strong><p>${esc(this.unlock[2])}</p></div>`:""}
-        <div class="evo-speaker">${esc(ev.speaker)}</div>
-        <h2>${ev.problem.map(esc).join("<br>")}</h2>
-        ${this.feedback?`<div class="evo-consequence"><span>CONSEQUENCE｜结果</span><p>${esc(this.feedback)}</p></div>`:""}
-        ${this.busy?`<div class="evo-building"><i></i><span>空间正在变化…</span></div>`:`<div class="evo-choices">${choices}</div>`}
-        <p class="evo-note">选择不是考试。先看方案会造成什么，再决定怎样继续。</p>
-      </div>`;
+      this.trying=false;this.o.busy=true;this.render();
+      this.o.run(this.world.snapshot(d.sceneMutation,-1,this.values()),d.transition.duration,()=>{
+        this.route.phase=d.activity?'activity':'discovery';this.feedback='';this.o.save();this.render();this.activityView();
+      });
+    }
+    next(){
+      if(this.state.screen!=='route'||this.route.phase!=='discovery'||this.o.busy)return;
+      const r=this.route,d=this.event;
+      if(!r.done.includes(d.id))r.done.push(d.id);
+      if(r.done.length===D.routes[this.state.route].length){this.o.save();this.enterMap();return;}
+      r.cursor=r.done.length;r.phase='problem';this.o.save();this.enterEvent();
+    }
+    viewpoint(value,record=true){
+      const x=value/100*4.1;
+      this.stage.view([x,1.9,7.8],[x,1.55,-7],true);this.stage.controlsEnabled=false;
+      if(record){
+        const v=this.route.values;v.viewpoint=value;
+        const point=Math.abs(value)<8?'center':Math.abs(value)>65?'side':null;
+        if(point&&!v.views.includes(point))v.views.push(point);
+      }
+      this.stage.show('it-seat',false);
+      this.stage.show('it-axis',Math.abs(value)<8);this.stage.show('it-guides',Math.abs(value)<8);
+    }
+    activityView(){
+      if(this.stage.ok&&this.state.screen==='route'&&this.route.phase==='activity'){
+        if(this.event.activity==='perspective')this.viewpoint(0,false);
+        if(this.event.activity==='viewpoint')this.viewpoint(this.route.values.viewpoint,true);
+        this.o.save();this.sync();
+      }
+    }
+    input(kind,value){
+      if(!this.active||this.o.busy||!this.stage.ok||!Number.isFinite(value))return;
+      if(this.state.screen==='comparison'&&kind==='logic'){
+        const c=this.state.comparison;c.value=T.clamp(value,0,100);c.layout='mix';
+        if([0,100].includes(c.value)&&!c.ends.includes(c.value))c.ends.push(c.value);
+        this.world.apply(this.world.comparison(c.value));this.stage.go(D.routeCamera);this.o.save();this.updateOverlay();this.sync();return;
+      }
+      if(this.state.screen!=='route'||this.route.phase!=='activity'||kind!==this.event.activity)return;
+      const v=this.route.values;
+      if(['perspective','platform'].includes(kind))v[kind]=Math.round(T.clamp(value,0,4));
+      if(kind==='morph')v.morph=Math.round(T.clamp(value,0,100));
+      if(kind==='viewpoint')this.viewpoint(T.clamp(value,-100,100));
+      else{this.world.apply(this.world.snapshot(this.event.sceneMutation,-1,this.values()));if(kind==='perspective')this.viewpoint(0,false);}
+      this.o.save();this.sync();
+    }
+    activityAction(name,value){
+      if(this.state.screen!=='route'||this.route.phase!=='activity'||this.o.busy||!this.stage.ok)return;
+      const v=this.route.values,kind=this.event.activity;
+      if(name==='company'&&kind==='company'){
+        const i=Number(value);if(![0,1,2,3].includes(i))return;
+        if(i===3&&[0,1,2].some(x=>!v.company.includes(x))){this.o.context.toast('先加入三类成员，再联系赞助者。');return;}
+        if(!v.company.includes(i))v.company.push(i);
+      }else if(name==='theme'&&['scenery','props'].includes(kind)){
+        const list=kind==='scenery'?['city','palace','forest']:['palace','forest','battle'];if(!list.includes(value))return;
+        const visited=kind==='scenery'?v.sceneries:v.propVisits;if(!visited.includes(value))visited.push(value);v[kind]=value;
+      }else if(name==='look'&&kind==='actor-view'){
+        if(!['left','front','right'].includes(value))return;
+        if(!v.looks.includes(value))v.looks.push(value);
+        this.stage.view([0,1.75,-.6],{left:[-4,1,-.7],front:[0,1,4],right:[4,1,-.7]}[value]);
+        this.stage.show('en-player2',false);this.stage.controlsEnabled=true;this.o.save();this.render();return;
+      }else if(name==='token'&&kind==='cosmos'){
+        if(!['heaven','earth','hell'].includes(value))return;
+        this.selectedToken=value;this.render();return;
+      }else if(name==='slot'&&kind==='cosmos'){
+        if(!this.selectedToken){this.o.context.toast('先选择一个词，再选它的位置。');return;}
+        if(this.selectedToken!==value){this.o.context.toast('观察上方的 Heavens、舞台表面与台下活板门，再试一次。');return;}
+        if(!v.cosmos.includes(value))v.cosmos.push(value);this.selectedToken='';
+      }else return;
+      this.o.save();this.o.busy=true;this.render();
+      this.o.run(this.world.snapshot(this.event.sceneMutation,-1,this.values()),650,()=>this.render());
+    }
+    sync(){
+      const out=$('evo-output'),commit=$('evo-commit');
+      if(this.state.screen==='comparison'){
+        if(out)out.textContent=this.state.comparison.value===0?'意大利 · 单向构图':this.state.comparison.value===100?'英国 · 三面交流':'对照混合态 · 不代表历史过渡阶段';
+        if(commit)commit.disabled=this.state.comparison.ends.length<2;return;
+      }
+      if(this.state.screen!=='route')return;
+      const v=this.route.values,kind=this.event.activity;
+      const message={perspective:`${v.perspective+1} / 5 档 · ${v.perspective===4?'共同消失点已形成':'继续观察建筑递减'}`,
+        viewpoint:`${Math.abs(v.viewpoint)<8?'中央':v.viewpoint<0?'左侧':'右侧'} · 已比较 ${v.views.length} / 2 种位置`,
+        platform:v.platform===4?'平台就位 · 观众进入院落和楼廊':'移动到院落后端',morph:`${v.morph}% · ${v.morph===100?'专用演出场所':'房间逐渐转为观看楼廊'}`,
+        props:{palace:'“诸位，请入宫议事。” · 王座',forest:'“林中树影遮住了归路。” · 树枝',battle:'“军旗在前，准备迎战。” · 旗帜'}[v.props]};
+      if(out)out.textContent=message[kind]||'点击完成空间安排';
+      if(commit)commit.disabled=!ready(kind,v)||this.o.busy;
+    }
+    controls(){
+      const kind=this.event.activity,v=this.route.values;
+      const slider=(label,min,max,value,step=1)=>`<label class="range-label" for="evo-range">${label}</label><input id="evo-range" type="range" min="${min}" max="${max}" step="${step}" value="${value}" data-story-control="${kind}" aria-label="${label}"><output id="evo-output" aria-live="polite"></output>`;
+      let html='';
+      if(['perspective','platform'].includes(kind))html=slider(kind==='perspective'?'调整视觉纵深':'移动平台 · 入口 → 院落后端',0,4,v[kind]);
+      if(kind==='morph')html=slider('院落 → 专用公共剧场',0,100,v.morph);
+      if(kind==='viewpoint')html=slider('观看位置 · 左侧 / 中央 / 右侧',-100,100,v.viewpoint);
+      if(kind==='company')html='<div class="branch-controls-grid">'+['演员','乐师','舞台协作','贵族赞助'].map((x,i)=>button('company',(v.company.includes(i)?'✓ ':'＋ ')+x,i,this.o.busy,i===3?'patron-control':'')).join('')+'</div>';
+      if(['scenery','props'].includes(kind)){
+        const list=kind==='scenery'?[['city','城市'],['palace','宫殿'],['forest','森林']]:[['palace','宫殿'],['forest','森林'],['battle','战场']];
+        const visited=kind==='scenery'?v.sceneries:v.propVisits;
+        html='<div class="branch-controls-grid three">'+list.map(([id,label])=>button('theme',(visited.includes(id)?'✓ ':'')+label,id,this.o.busy,v[kind]===id?'active':'')).join('')+'</div><output id="evo-output"></output>';
+      }
+      if(kind==='actor-view')html='<div class="branch-controls-grid three">'+[['left','左侧'],['front','前方'],['right','右侧']].map(([id,label])=>button('look',(v.looks.includes(id)?'✓ ':'')+'看'+label,id,this.o.busy)).join('')+'</div><small>现在你站在舞台上。点“复位”可回到建筑总览。</small>';
+      if(kind==='cosmos')html='<div class="cosmos-tokens">'+[['heaven','Heaven'],['earth','Earth'],['hell','Hell']].map(([id,label])=>button('token',(v.cosmos.includes(id)?'✓ ':'')+label,id,this.o.busy,this.selectedToken===id?'active':'')).join('')+'</div><div class="branch-controls-grid three">'+[['heaven','上方'],['earth','台面'],['hell','台下']].map(([id,label])=>button('slot',label,id,this.o.busy)).join('')+'</div><small>点选词语，再点击位置；可用键盘 Tab 和 Enter 操作。</small>';
+      return html+`<button type="button" id="evo-commit" data-action="story-evo-commit" class="primary" ${!ready(kind,v)||this.o.busy?'disabled':''}>记录这次发现 →</button>`;
+    }
+    updateOverlay(){
+      const el=$('branch-overlay'),s=this.state;el.hidden=!this.active;
+      if(!this.active)return;
+      el.dataset.screen=s.screen;let html='';
+      if(s.screen==='map'){
+          html='<div class="branch-map"><span class="branch-root">MEDIEVAL TRADITIONS<br><small>中世纪表演传统持续存在</small></span><div class="branch-connectors" aria-hidden="true"></div><div class="branch-map-ends">'+['italy','england'].map(r=>button('route',`<small>${r.toUpperCase()}</small><strong>${D.names[r]}</strong><span>${complete(s,r)?'✓ 已完成 · 查看结尾':s[r].done.length?`继续 · ${s[r].done.length}/${D.routes[r].length}`:'进入这条路线 ↗'}</span>`,r,this.o.busy||!this.stage.ok,`map-${r}`)).join('')+'</div><small class="map-note">区域关系示意 · 可任选先后</small></div>';
+      }else if(s.screen==='comparison'&&s.comparison.layout==='split'){
+        html='<div class="comparison-captions"><div><strong>ITALY</strong><span>COURT · PERSPECTIVE · FRAMED SPACE</span><small>视觉幻觉</small></div><div><strong>ENGLAND</strong><span>COMPANY · THRUST · OPEN STAGE</span><small>演员—观众关系</small></div></div>';
+      }else if(s.screen==='conclusion'){
+        html='<div class="branch-ending"><p>SAME PERIOD.<br>DIFFERENT QUESTIONS.<br><em>DIFFERENT THEATRES.</em></p><strong>同一个时代，不同的问题，产生不同的剧场。</strong></div>';
+      }
+      el.innerHTML=html;
+    }
+    render(){
+      const s=this.state,o=this.o,unavailable=!this.stage.ok;
+      $('story-opening').hidden=true;$('story-panel').dataset.phase='evolution';
+      document.body.dataset.branch=s.screen==='route'?s.route:s.screen;
+      let title='',text='',tag='',actions='',speaker='maker',name='',era='15—17世纪初 · 不同地区与实践的比较';
+      if(s.screen==='map'){
+        tag='EUROPE BRANCH · 历史并没有只有一个答案';title='15TH CENTURY EUROPE';name='剧场演化的第一次分叉';
+        text='这种城市演出传统并没有突然消失。但欧洲正在出现新的演出需求。请选择一条路线，另一条会保留。';
+        if(complete(s,'italy')&&!complete(s,'england'))text='同一个时代，英国没有完全沿着这条路线发展。回到共同的演出传统，看看另一种空间回答。';
+        if(complete(s,'england')&&!complete(s,'italy'))text='英国路线已完成。回到共同背景，比较意大利的古典研究与视觉实验。';
+        actions=button('compare','比较两条路线 →','',!both(s)||o.busy||unavailable,'primary')+button('trunk','回到此前章节','',o.busy);
+        for(const r of ['italy','england'])if(complete(s,r))actions+=`<p class="branch-keywords"><b>✓ ${r.toUpperCase()}</b><br>${D.keywords[r].join(' · ')}</p>`;
+      }else if(s.screen==='route'){
+        const d=this.event;speaker=d.speaker;name=d.discovery.zh;title=d.title;text=d.problem;
+        tag=`${s.route.toUpperCase()} · ${this.route.cursor+1} / ${D.routes[s.route].length}`;
+        if(o.busy){tag+=' · 空间正在变化';text=this.feedback||d.consequence;actions='<span class="building-pulse" aria-hidden="true"></span><small>观察人物与空间的改变 · 可暂停</small>';}
+        else if(this.trying){tag+=' · 观察后调整';text=this.feedback;actions=button('retry','调整方案，再试一次','','','primary');}
+        else if(this.route.phase==='problem')actions=d.choices.map((c,i)=>button('choose',esc(c.text),i,unavailable,'story-choice')).join('');
+        else if(this.route.phase==='activity'){tag+=' · 动手观察';text=d.consequence;actions=this.controls();}
+        else {tag=d.discovery.en;title=d.discovery.zh;text=d.teachingPoint;actions=button('next',this.route.cursor===D.routes[s.route].length-1?'完成本线，返回欧洲分叉 →':'继续下一幕 →','',unavailable,'primary');}
+        actions+=button('map','返回分叉 · 保留本线进度','',o.busy);
+      }else if(s.screen==='comparison'){
+        tag='SAME PERIOD · DIFFERENT SPATIAL LOGICS';name='同一时代，两种剧场逻辑';title='拖动，看观众与舞台怎样重组';
+        text='先比较两侧模型，再把滑杆移到两个端点：一边强化共享构图，另一边让演员进入观众之间。中间态仅用于对照。';
+        actions=`<label class="range-label" for="evo-range"><span>ITALY</span><span>ENGLAND</span></label><input id="evo-range" data-story-control="logic" type="range" min="0" max="100" value="${s.comparison.value}" aria-label="意大利与英国剧场逻辑比较"><output id="evo-output"></output><div class="branch-controls-grid">${button('layout','并列模型','split',unavailable)}<button id="evo-commit" data-action="story-evo-conclude" class="primary" ${s.comparison.ends.length<2?'disabled':''}>带走课程结论 →</button></div>`;
+      }else if(s.screen==='conclusion'){
+        tag='THEATRE IS SHAPED BY WHAT PERFORMANCE NEEDS.';name='剧场，是怎样被塑造的？';title='不同需求，塑造不同的空间';
+        text='意大利这条路线重在怎样建立可信的视觉世界；英国这条路线重在怎样让演员与大量观众共同完成一场戏。两者是比较重点，并非互斥的国家标签。';
+        actions=button('tree','查看完整演化树','','','primary')+button('compare','重做双路线比较')+button('map','返回欧洲分叉');
+      }
+      if(unavailable){text='当前 3D 显示未能恢复。进度会保留，请刷新或换用系统浏览器。';actions='<button data-action="period" data-value="greek">打开文字与空间导览</button>';}
+      const role=T.Portraits.roles[speaker]||T.Portraits.roles.builder;
+      $('story-portrait').innerHTML=T.Portraits.svg(speaker);$('story-person').textContent=role[0];$('story-person-en').textContent=role[1];
+      $('story-tag').textContent=tag;$('story-title').textContent=title;$('story-dialogue').textContent=text;$('story-choices').innerHTML=actions;
+      $('scene-kicker').textContent=s.screen==='route'?`${s.route.toUpperCase()} / ${this.event.id.split('_')[1]}`:'EUROPE · TWO PATHS';
+      $('scene-title').textContent=name;$('scene-date').textContent=era;
+      $('story-step').textContent=`EVOLUTION MODE · ${s.italy.done.length+s.england.done.length} / 18 个支线发现`;
+      $('story-saving').textContent=o.unsaved?'浏览器限制保存：本次会话内有效':'两条路线分别保存';
+      $('story-timeline').innerHTML=`<span>MEDIEVAL</span><div class="mini-fork"><i class="lit"></i><b class="${complete(s,'italy')?'lit':''}">IT</b><b class="${complete(s,'england')?'lit':''}">EN</b></div>`;
+      $('story-pause').disabled=!o.busy;$('story-pause').textContent=o.paused?'继续':'暂停';
+      $('story-live').textContent=o.busy?'空间正在变化':title;
+      this.stage.controlsEnabled=!o.busy&&!(s.screen==='route'&&this.route.phase==='activity'&&['perspective','viewpoint'].includes(this.event.activity));
+      if(s.screen==='route'&&!o.busy){
+        const scene=this.scene();let labels=[];
+        if(scene==='it-zones')labels=[['FORESTAGE',[0,.85,1.2]],['PERSPECTIVE SCENERY',[0,2.8,-5.8]]];
+        if(scene==='en-cosmos')labels=[['HEAVENS',[0,4.8,-2.8]],['STAGE',[2.2,1.1,.2]],['HELL / TRAP · 剖口',[0,-.1,2.7]]];
+        this.o.setLabels(labels);
+      }
+      this.updateOverlay();this.sync();
+    }
+    tree(){
+      const s=this.state;
+      const trunk='<div class="tree-trunk">RITUAL · 祭仪<br>GREECE · 希腊<br>ROME · 罗马<br>MEDIEVAL · 中世纪</div>';
+      const arms=['italy','england'].map(r=>`<section><h3>${r.toUpperCase()} · ${D.names[r]}</h3><p>${D.summary[r]}</p><ol>${D.routes[r].map(d=>`<li class="${s[r].done.includes(d.id)?'learned':''}"><small>${d.discovery.en}</small>${d.discovery.zh}${s[r].done.includes(d.id)?' ✓':''}</li>`).join('')}</ol>${button('route',complete(s,r)?'查看本线结尾':'进入 / 继续',r,this.o.busy||(!this.active&&this.o.memory.phase!=='finished'))}</section>`).join('');
+      this.o.context.modal('剧场演化树',`<p>从共同背景长出的两条路线；不表示一条替代另一条。课堂直达不会补记前章成绩。</p><div class="evolution-tree">${trunk}<div class="tree-arms">${arms}</div></div><p>法国、意大利民间演出、英国室内剧场等实践留待后续扩展。</p><button data-action="story-sources">史料与教学边界</button><button data-action="story-restart-dialog">重新开始故事</button>`);
+    }
+    handle(name,value){
+      if(name==='evo-enter'&&!this.active&&this.o.memory.phase==='finished'){this.enterMap();return true;}
+      if(!name.startsWith('evo-'))return false;
+      const action=name.slice(4);
+      if(action==='tree'){this.tree();return true;}
+      if(action==='route'&&(this.active||this.o.memory.phase==='finished')&&!this.o.busy&&this.stage.ok){this.beginRoute(value);return true;}
+      if(!this.active||this.o.busy||!this.stage.ok)return true;
+      if(action==='map')this.enterMap();
+      if(action==='choose')this.choose(value);
+      if(action==='retry'&&this.trying){this.trying=false;this.feedback='';this.o.busy=true;this.render();this.overview();this.o.run(this.snapshot(),700,()=>this.render());}
+      if(action==='commit'&&this.state.screen==='route'&&this.route.phase==='activity'&&ready(this.event.activity,this.route.values)){
+        this.route.phase='discovery';this.o.save();this.render();this.overview();
+      }
+      if(action==='next')this.next();
+      if(['company','theme','look','token','slot'].includes(action))this.activityAction(action,value);
+      if(action==='compare'&&both(this.state)){this.state.screen='comparison';this.o.save();this.restore();this.overview();this.render();}
+      if(action==='layout'&&this.state.screen==='comparison'){this.state.comparison.layout='split';this.o.save();this.restore();this.overview();this.render();}
+      if(action==='conclude'&&this.state.screen==='comparison'&&this.state.comparison.ends.length===2){this.state.screen='conclusion';this.o.save();this.render();}
+      if(action==='trunk'){this.state.screen='trunk';this.o.phase=this.o.memory.phase;this.o.save();$('branch-overlay').hidden=true;delete document.body.dataset.branch;this.o.world.apply(this.o.world.snapshot(this.o.index,this.o.memory.stop));this.o.overview();this.o.render();}
+      return true;
     }
   }
-
-  T.Evolution = Evolution;
-  T.EVOLUTION_CHAPTERS = CHAPTERS;
+  T.Evolution=Evolution;T.cleanEvolutionMemory=clean;T.freshEvolutionMemory=fresh;
+  T.branchActivityReady=ready;
+  T.STORY.version=5;T.STORY.storageKey='theatre-time-machine-v5-story';
 })(window.TTM);

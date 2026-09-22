@@ -1,0 +1,107 @@
+/* V4：沿用馆藏色彩。小横屏让场景与可滚动操作区各占独立列。 */
+.home-chapter{display:block;margin-top:10px;border-color:#c6b59466;color:#e2d2ae;font-size:12px;min-height:44px;background:#bca8790a}
+body[data-screen="story"] #main{padding-top:0}
+#branch-overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
+#branch-overlay button{pointer-events:auto}
+body[data-branch] #main{grid-template-columns:minmax(0,1fr) 350px;grid-template-rows:minmax(0,1fr)}
+body[data-branch] #stage-area{grid-column:1;grid-row:1}
+body[data-branch] #story-panel{grid-column:2;grid-row:1;border-top:0;border-left:1px solid #b7c8a833;padding:18px 20px;overflow-y:auto}
+body[data-branch] .story-panel-content{grid-template-columns:52px minmax(0,1fr);gap:16px;align-items:start}
+body[data-branch] #story-portrait{width:49px}
+body[data-branch] .story-character strong{font-size:10px;text-align:center}
+body[data-branch] #story-choices{grid-column:1/-1;gap:8px}
+body[data-branch] #story-title{font-size:21px}
+body[data-branch] #story-dialogue{font-size:14px;line-height:1.85}
+body[data-branch] .story-panel-meta{flex-direction:column;gap:3px}
+body[data-branch] #story-choices button{font-size:13px;min-height:44px;line-height:1.6}
+body[data-branch] .scene-heading{max-width:calc(100% - 110px)}
+body[data-branch] .scene-heading h2{font-size:21px}
+body[data-branch] .scene-heading p{max-width:400px}
+body[data-branch] #story-timeline{right:20px;top:22px}
+body[data-branch] #story-timeline>span{display:none}
+.mini-fork{display:grid;grid-template-columns:24px 24px;grid-template-rows:10px 20px;column-gap:12px;position:relative;color:#c0c7b5;font-size:9px;text-align:center}
+.mini-fork>i{grid-column:1/-1;justify-self:center}
+.mini-fork:after{content:"";position:absolute;left:12px;right:12px;top:8px;height:5px;border:1px solid #b7c8a855;border-bottom:0}
+.mini-fork b{font-weight:400;padding-top:3px}
+.mini-fork b.lit{color:var(--accent)}
+.branch-map{position:absolute;left:15%;right:15%;top:23%;bottom:21%;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.branch-root{text-align:center;letter-spacing:.11em;font-size:11px;line-height:1.7;background:#112b24e8;border:1px solid #b7c8a866;padding:8px 20px;border-radius:4px}
+.branch-root small{font-size:10px;letter-spacing:0}
+.branch-connectors{width:52%;height:30px;border-top:1px solid #b5c7a1;border-left:1px solid #b5c7a1;border-right:1px solid #b5c7a1;position:relative;margin-top:19px;flex:none}
+.branch-connectors:before{content:"";width:1px;height:20px;background:#b5c7a1;position:absolute;left:50%;bottom:100%}
+.branch-map-ends{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:24px}
+.branch-map-ends button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;border-radius:5px;padding:14px 20px;background:#152c28ef;border:1px solid #cfb88799;box-shadow:0 10px 40px #06191266}
+.branch-map-ends button.map-england{border-color:#be907c99}
+.branch-map-ends small{font-size:10px;letter-spacing:.2em;color:#dfc9a5}
+.branch-map-ends strong{font-size:23px;font-weight:450;letter-spacing:2px}
+.branch-map-ends span{font-size:11px;color:#c6d4c4}
+.map-note{font-size:10px;margin-top:10px;background:#102b25cc;padding:3px 10px}
+.branch-controls-grid,.cosmos-tokens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.branch-controls-grid.three,.cosmos-tokens{grid-template-columns:repeat(3,minmax(0,1fr))}
+#story-choices .branch-controls-grid button,#story-choices .cosmos-tokens button{text-align:center;padding:8px 4px;font-size:12px}
+#story-choices output{font-size:11px;line-height:1.6;color:#c8d4bb;min-height:18px}
+.branch-keywords{font-size:10px;line-height:1.8;letter-spacing:.03em;color:#bacaad;border-top:1px solid #b7c8a833;padding-top:10px;margin:4px 0}
+#story-choices .range-label{font-size:12px;line-height:1.6}
+#evo-range{margin:0;height:48px;flex:none}
+.comparison-captions{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr}
+.comparison-captions>div{padding:92px 10px 60px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:5px;border-right:1px solid #bdc5a622}
+.comparison-captions>div:last-child{border:0}
+.comparison-captions strong{font-size:12px;letter-spacing:.2em;color:#dcc6a0}
+.comparison-captions span{font-size:9px;letter-spacing:.03em;position:absolute;bottom:80px;background:#142e26ce;padding:4px 6px;text-align:center;max-width:45%}
+.comparison-captions small{font-size:12px;color:#d6dec8;background:#142e26ce;padding:4px 6px}
+.branch-ending{position:absolute;inset:0;background:#0b1515f7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:28px;text-align:center}
+.branch-ending p{font-size:clamp(20px,3.8vw,48px);line-height:1.35;letter-spacing:-.02em;font-weight:400;margin:0}
+.branch-ending em{font-style:normal;color:#c1d5ae}
+.branch-ending strong{font-weight:400;font-size:14px;color:#d0c7b0;line-height:1.8}
+.evolution-tree .tree-trunk{width:fit-content;margin:20px auto 0;line-height:2.3;font-size:12px;text-align:center;border-left:1px solid var(--accent);padding:0 22px 12px}
+.tree-arms{display:grid;grid-template-columns:1fr 1fr;gap:22px;border-top:1px solid var(--accent)}
+.tree-arms section{min-width:0;border-left:1px solid #b8c8a855;padding:0 0 0 12px}
+.tree-arms h3{font-size:13px;margin-top:15px}.tree-arms p{font-size:12px!important;line-height:1.7}
+.tree-arms ol{padding-left:18px}.tree-arms li{font-size:12px!important;color:#819486;padding:5px 0}
+.tree-arms li.learned{color:#e4e9d5}.tree-arms li small{display:block;font-size:9px;letter-spacing:.04em}
+@media(orientation:landscape) and (max-height:650px){
+  body[data-branch] #main{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr)}
+  body[data-branch] #story-panel{padding:11px 14px}
+  body[data-branch] .story-panel-content{grid-template-columns:36px minmax(0,1fr);gap:9px}
+  body[data-branch] #story-portrait{width:35px}
+  body[data-branch] .story-character small{display:none}
+  body[data-branch] #story-title{font-size:17px}
+  body[data-branch] #story-dialogue{font-size:12px;line-height:1.75}
+  body[data-branch] .story-panel-meta small{display:none}
+  body[data-branch] #story-choices button{font-size:12px}
+  body[data-branch] #main .scene-heading h2{font-size:17px}
+  body[data-branch] #story-timeline{top:14px;right:12px}
+  .branch-map{left:10%;right:10%;top:24%;bottom:20%}
+  .branch-root{padding:4px 10px;font-size:9px;line-height:1.4}
+  .branch-root small{font-size:8px}
+  .branch-connectors{height:12px;margin-top:12px}.branch-connectors:before{height:12px}
+  .branch-map-ends{gap:13px}
+  .branch-map-ends button{gap:3px;padding:8px 12px}
+  .branch-map-ends strong{font-size:19px}.branch-map-ends span{font-size:9px}
+  .map-note{font-size:8px;margin-top:6px}
+  .comparison-captions>div{padding-top:64px;padding-bottom:58px}
+  .comparison-captions span{font-size:7px;bottom:80px}.comparison-captions small{font-size:10px}
+  .branch-ending{padding:20px 14px;gap:12px}.branch-ending p{font-size:24px}.branch-ending strong{font-size:12px}
+  body[data-screen="home"] #intro{top:0;transform:none;height:100%;overflow:auto;padding-top:14px;padding-bottom:14px;pointer-events:auto}
+  .home-chapter{font-size:11px;max-width:260px}
+}
+@media(orientation:landscape) and (max-width:700px){
+  body[data-branch] #main{grid-template-columns:minmax(0,1fr) 265px}
+  body[data-branch] .scene-heading{max-width:90%;top:8px}
+  body[data-branch] #story-timeline{display:none}
+  .branch-map{left:5%;right:5%}.branch-map-ends{gap:8px}
+  .branch-map-ends button{padding:8px}.branch-map-ends strong{font-size:16px}
+}
+@media(orientation:portrait){
+  body[data-branch] #main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(310px,46svh) auto;overflow:visible}
+  body[data-branch] #stage-area{grid-column:1;grid-row:1}
+  body[data-branch] #story-panel{grid-column:1;grid-row:2;overflow:visible;border-left:0;border-top:1px solid #b7c8a833;padding:17px 20px}
+  body[data-branch] .story-panel-content{grid-template-columns:45px minmax(0,1fr);gap:14px}
+  body[data-branch] .story-panel-meta small{display:none}
+  body[data-branch] #story-dialogue{font-size:14px}
+  body[data-branch] #story-title{font-size:20px}
+  .branch-map{left:8%;right:8%}.branch-map-ends{gap:14px}
+  .branch-map-ends button{padding:10px 12px}.branch-map-ends strong{font-size:21px}
+  .comparison-captions span{font-size:7px}
+  .tree-arms{gap:12px}.tree-arms section{padding-left:8px}
+}

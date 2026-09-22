@@ -134,25 +134,6 @@
       m.line([x, 2.7, 4.8], [0, 1.3, -3.15], "#66cfb5", .04);
     });
 
-    // Evolution Mode：早期祭仪与临时木制观看区。
-    m.use("evo-altar");
-    m.cylinder(0, .08, 0, .42, .55, "#c9b58d", 18);
-    m.cylinder(0, .62, 0, .28, .12, "#eadfc6", 18);
-    m.use("evo-ritual");
-    for (let i = 0; i < 8; i++) {
-      const a = i * 2 * PI / 8;
-      m.person(Math.cos(a) * 1.55, .12, Math.sin(a) * 1.55, "#a96f58", .82, a + PI);
-    }
-    for (let i = 0; i < 9; i++) {
-      const a = .15 + i * (PI - .3) / 8;
-      m.person(Math.cos(a) * 3.4, .12, Math.sin(a) * 3.4, "#6f7b73", .78, a + PI);
-    }
-    m.use("evo-wood-theatron");
-    for (let row = 0; row < 8; row++) {
-      const ri = 3.25 + row * .4, ro = ri + .30;
-      m.band(0, 0, ri, ro, .02, .13 + row * .20, -.08, PI + .08, row % 2 ? "#a5825f" : "#b08d68", 34);
-    }
-
     m.use("anomaly");
     // 现代镜框与实体侧翼进入歌队区：有真实遮挡，并保留中央开口。
     [-1, 1].forEach(sign => {
@@ -290,75 +271,6 @@
       }
     });
 
-    // Evolution Mode：礼仪表演、并置场景。
-    m.use("church-performance");
-    m.person(-4.3, .12, -1.45, "#a7564d", .92, PI);
-    m.person(-3.55, .12, -1.45, "#d0c3a4", .92, PI);
-    m.person(-2.85, .12, -1.45, "#a7564d", .88, PI);
-
-    m.use("mansion-heaven");
-    m.box(-3.2, .12, .2, 2.0, .45, 1.2, "#d8cfb4");
-    m.box(-3.2, .55, .2, 1.65, 1.2, .15, "#eee6cf");
-    m.roof(-3.2, 1.75, .2, 1.8, .55, .5, "#d7c486");
-    m.use("mansion-jerusalem");
-    m.box(0, .12, .2, 2.1, .45, 1.2, "#bda783");
-    m.box(0, .55, .2, 1.7, 1.15, .15, "#d9c8a7");
-    m.use("mansion-hell");
-    m.box(3.2, .12, .2, 2.0, .45, 1.2, "#5d4d47");
-    m.box(3.2, .55, .2, 1.65, 1.1, .15, "#78483f");
-    m.tri([2.4,1.65,.08],[3.2,2.35,.08],[4.0,1.65,.08],"#9b5b48");
-
-    return m;
-  }
-
-  function roman() {
-    const m = new T.Mesh();
-    base(m, "#a9977d", 8);
-
-    m.use("roman-hill");
-    m.band(0, 0, 5.9, 7.4, .01, 2.35, -.08, PI + .08, "#9b907b", 48);
-
-    m.use("roman-cavea");
-    for (let row = 0; row < 10; row++) {
-      const ri = 3.1 + row * .39, ro = ri + .36;
-      m.band(0, 0, ri, ro, .05, .16 + row * .22, -.08, PI + .08, row % 2 ? "#dfd7c4" : "#d4c9b4", 44);
-    }
-    m.use("roman-orchestra");
-    m.cylinder(0, .03, .2, 2.25, .10, "#c9ad79", 48);
-
-    m.use("roman-stage");
-    m.box(0, .08, -3.0, 6.8, .72, 1.35, "#cbb795");
-
-    m.use("roman-arcades");
-    for (let i = -5; i <= 5; i++) {
-      const x = i * 1.05;
-      m.box(x, -.05, 4.75, .26, 2.45, .42, "#b7aa92");
-      if (i < 5) m.box(x + .525, 2.15, 4.75, .82, .26, .42, "#cabca3");
-    }
-    m.box(0, -.08, 5.2, 11.5, .35, 1.25, "#9c8e79");
-
-    m.use("roman-scaenae");
-    m.box(0, .10, -4.65, 8.5, 3.8, .75, "#b9a98f");
-    m.box(0, 3.75, -4.65, 8.9, .24, .95, "#ded2b9");
-    [-3.2,-1.6,0,1.6,3.2].forEach(x => {
-      m.cylinder(x, .15, -4.15, .12, 3.05, "#eee3cc", 12);
-      m.box(x, 2.95, -4.15, .34, .18, .36, "#d3c5aa");
-    });
-    [-2.45,0,2.45].forEach(x => m.box(x, .12, -4.05, .95, 1.9, .08, "#4c4942"));
-    m.box(0, 2.0, -4.02, 7.7, .18, .08, "#927b5d");
-
-    m.use("roman-amphi");
-    for (let row = 0; row < 8; row++) {
-      const ri = 3.15 + row * .39, ro = ri + .35;
-      m.band(0, 0, ri, ro, .04, .14 + row * .2, PI - .08, 2 * PI + .08, row % 2 ? "#d9cfbc" : "#cfc4ae", 40);
-    }
-    m.cylinder(0, .03, 0, 2.55, .10, "#bd8c63", 48);
-
-    m.use("roman-people");
-    for (let i = 0; i < 28; i++) {
-      const a=.06 + i*(PI-.12)/27, r=4.0 + (i%4)*.72;
-      m.person(Math.cos(a)*r, .30+(i%4)*.4, Math.sin(a)*r, PALETTE.crowd,.78,a+PI);
-    }
     return m;
   }
 
@@ -549,7 +461,6 @@
 
   T.BUILDERS = {
     greek,
-    roman,
     medieval,
     renaissance,
     elizabeth
